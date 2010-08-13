@@ -74,6 +74,11 @@
       <run class="org.eclipse.core.tests.internal.builders.EmptyDeltaBuilder2"/>
     </builder>
   </extension>
+  <extension point="org.eclipse.core.resources.builders" id="variantbuilder" name="Variant Builder">
+    <builder callOnEmptyDelta="false">
+      <run class="org.eclipse.core.tests.internal.builders.VariantBuilder"/>
+    </builder>
+  </extension>
   
 <extension
       id="simpleNature"
