@@ -1,0 +1,181 @@
+/*******************************************************************************
+ * Copyright (c) 2010 Broadcom Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ * Alex Collins (Broadcom Corp.) - initial API and implementation
+ *******************************************************************************/
+package org.eclipse.core.tests.internal.builders;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+import org.eclipse.core.internal.events.BuildContext;
+import org.eclipse.core.resources.*;
+import org.eclipse.core.runtime.CoreException;
+
+/**
+ * These tests exercise the build context functionality that tells a builder in what context
+ * it was called.
+ */
+public class BuildContextTest extends AbstractBuilderTest {
+	public static Test suite() {
+		return new TestSuite(BuildVariantsTest.class);
+	}
+
+	private IProject project0;
+	private IProject project1;
+	private IProject project2;
+	private IProject project3;
+	private IProject project4;
+	private final String variant0 = "Variant0";
+	private final String variant1 = "Variant1";
+
+	public BuildContextTest(String name) {
+		super(name);
+	}
+
+	protected void setUp() throws Exception {
+		super.setUp();
+		// Create resources
+		IWorkspaceRoot root = getWorkspace().getRoot();
+		project0 = root.getProject("Project0");
+		project1 = root.getProject("Project1");
+		project2 = root.getProject("Project2");
+		project3 = root.getProject("Project3");
+		project4 = root.getProject("Project4");
+		IResource[] resources = {project0, project1, project2, project3, project4};
+		ensureExistsInWorkspace(resources, true);
+		setAutoBuilding(false);
+		setupProject(project0);
+		setupProject(project1);
+		setupProject(project2);
+		setupProject(project3);
+		setupProject(project4);
+	}
+
+	/**
+	 * Helper method to configure a project with a build command and several variants.
+	 */
+	private void setupProject(IProject project) throws CoreException {
+		IProjectDescription desc = project.getDescription();
+
+		// Add build command
+		ICommand command = createCommand(desc, VariantBuilder.BUILDER_NAME, "Build0");
+		command.setBuilding(IncrementalProjectBuilder.AUTO_BUILD, true);
+		command.setBuilding(IncrementalProjectBuilder.FULL_BUILD, true);
+		command.setBuilding(IncrementalProjectBuilder.INCREMENTAL_BUILD, true);
+		command.setBuilding(IncrementalProjectBuilder.CLEAN_BUILD, true);
+		desc.setBuildSpec(new ICommand[] {command});
+
+		// Create variants
+		desc.setVariants(new String[] {variant0, variant1});
+
+		project.setDescription(desc, getMonitor());
+	}
+
+	/**
+	 * Setup a reference graph, then test the build context for for each project involved
+	 * in the 'build'. The reference graph contains the following structures:
+	 *  - Multiple directly referenced variants
+	 *  - Multiple directly referencing variants
+	 *  - Cycles and loops - between both 2 variants and 3 variants
+	 *  - Variants that is not part of the build but are part of the reference graph
+	 */
+	public void testBuildContextForComplexGraph() throws CoreException {
+		// Create reference graph
+		IProjectVariant p0v0 = project0.getVariant(variant0);
+		IProjectVariant p0v1 = project0.getVariant(variant1);
+		IProjectVariant p1v0 = project1.getVariant(variant0);
+		IProjectVariant p1v1 = project1.getVariant(variant1);
+		IProjectVariant p2v0 = project2.getVariant(variant0);
+		IProjectVariant p2v1 = project2.getVariant(variant1);
+		IProjectVariant p3v0 = project3.getVariant(variant0);
+		//IProjectVariant p3v1 = project3.getVariant(variant1);
+		IProjectVariant p4v0 = project4.getVariant(variant0);
+		IProjectVariant p4v1 = project4.getVariant(variant1);
+		setReferences(project0, variant0, new IProjectVariant[] {p0v1, p1v1, p4v0});
+		setReferences(project0, variant1, new IProjectVariant[] {p1v0, p2v0});
+		setReferences(project1, variant0, new IProjectVariant[] {p2v1});
+		setReferences(project1, variant1, new IProjectVariant[] {p2v1, p4v1});
+		setReferences(project2, variant0, new IProjectVariant[] {p3v0});
+		setReferences(project2, variant1, new IProjectVariant[] {});
+		setReferences(project3, variant0, new IProjectVariant[] {p0v1, p2v0, p2v1});
+		setReferences(project3, variant1, new IProjectVariant[] {p0v0, p3v0});
+		setReferences(project4, variant0, new IProjectVariant[] {p0v0, p4v1});
+		setReferences(project4, variant1, new IProjectVariant[] {p1v1});
+
+		// Create build order
+		final IProjectVariant[] buildOrder = new IProjectVariant[] {p2v1, p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1, p4v0};
+
+		IBuildContext context;
+
+		context = new BuildContext(p2v1, buildOrder);
+		assertArraysContainSameElements(new IProjectVariant[] {}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements(new IProjectVariant[] {p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1, p4v0}, context.getAllReferencingProjectVariants());
+
+		context = new BuildContext(p1v0, buildOrder);
+		assertArraysContainSameElements(new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p0v1, p2v0, p3v0, p4v0}, context.getAllReferencingProjectVariants());
+
+		context = new BuildContext(p1v1, buildOrder);
+		assertArraysContainSameElements(new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p4v0, p4v1}, context.getAllReferencingProjectVariants());
+
+		context = new BuildContext(p3v0, buildOrder);
+		assertArraysContainSameElements(new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p0v1, p2v0, p4v0}, context.getAllReferencingProjectVariants());
+
+		context = new BuildContext(p2v0, buildOrder);
+		assertArraysContainSameElements(new IProjectVariant[] {p2v1, p3v0}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p0v1, p4v0}, context.getAllReferencingProjectVariants());
+
+		context = new BuildContext(p0v1, buildOrder);
+		assertArraysContainSameElements(new IProjectVariant[] {p2v1, p1v0, p3v0, p2v0}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p4v0}, context.getAllReferencingProjectVariants());
+
+		context = new BuildContext(p0v0, buildOrder);
+		assertArraysContainSameElements(new IProjectVariant[] {p0v1, p1v0, p1v1, p2v0, p2v1, p3v0}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements(new IProjectVariant[] {p4v0}, context.getAllReferencingProjectVariants());
+
+		context = new BuildContext(p4v1, buildOrder);
+		assertArraysContainSameElements(new IProjectVariant[] {p1v1, p2v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements(new IProjectVariant[] {p4v0}, context.getAllReferencingProjectVariants());
+
+		context = new BuildContext(p4v0, buildOrder);
+		assertArraysContainSameElements(new IProjectVariant[] {p2v1, p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements(new IProjectVariant[] {}, context.getAllReferencingProjectVariants());
+	}
+
+	/**
+	 * Helper method to set the references for a project.
+	 */
+	private void setReferences(IProject project, String variant, IProjectVariant[] refs) throws CoreException {
+		IProjectDescription desc = project.getDescription();
+		desc.setReferencedProjectVariants(variant, refs);
+		project.setDescription(desc, getMonitor());
+	}
+
+	/** Helper method to check if two project variant arrays contain the same elements, but in any order */
+	private void assertArraysContainSameElements(IProjectVariant[] expected, IProjectVariant[] actual) {
+		assertEquals(expected.length, actual.length);
+		Comparator comparator = new Comparator() {
+			public int compare(Object left, Object right) {
+				IProjectVariant leftV = (IProjectVariant) left;
+				IProjectVariant rightV = (IProjectVariant) right;
+				int ret = leftV.getProject().getName().compareTo(rightV.getProject().getName());
+				if (ret == 0)
+					ret = leftV.getVariant().compareTo(rightV.getVariant());
+				return ret;
+			}
+		};
+		Arrays.sort(expected, comparator);
+		Arrays.sort(actual, comparator);
+		for (int i = 0; i < expected.length; i++)
+			assertEquals(expected[i], actual[i]);
+	}
+}
