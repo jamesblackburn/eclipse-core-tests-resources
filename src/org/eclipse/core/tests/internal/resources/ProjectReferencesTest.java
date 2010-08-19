@@ -12,8 +12,7 @@ package org.eclipse.core.tests.internal.resources;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.tests.resources.ResourceTest;
 
@@ -25,17 +24,40 @@ public class ProjectReferencesTest extends ResourceTest {
 		return new TestSuite(ProjectReferencesTest.class);
 	}
 
+	private IProject project0;
+	private IProject project1;
+	private IProject project2;
+	private IProject project3;
+	private IProject closedProject;
+	private String variant0 = "Variant0";
+	private String variant1 = "Variant1";
+
 	public ProjectReferencesTest(String name) {
 		super(name);
 	}
 
-	public void testSetAndGetProjectReferences() throws CoreException {
-		IProject project0 = getWorkspace().getRoot().getProject("Project0");
-		IProject project1 = getWorkspace().getRoot().getProject("Project1");
-		IProject project2 = getWorkspace().getRoot().getProject("Project2");
-		IProject project3 = getWorkspace().getRoot().getProject("Project3");
-		ensureExistsInWorkspace(new IProject[] {project0, project1, project2, project3}, true);
+	public void setUp() throws Exception {
+		project0 = getWorkspace().getRoot().getProject("Project0");
+		project1 = getWorkspace().getRoot().getProject("Project1");
+		project2 = getWorkspace().getRoot().getProject("Project2");
+		project3 = getWorkspace().getRoot().getProject("Project3");
+		closedProject = getWorkspace().getRoot().getProject("Project4");
+		setUpVariants(project0);
+		setUpVariants(project1);
+		setUpVariants(project2);
+		setUpVariants(project3);
+		setUpVariants(closedProject);
+		ensureExistsInWorkspace(new IProject[] {project0, project1, project2, project3, closedProject}, true);
+		closedProject.close(getMonitor());
+	}
 
+	private void setUpVariants(IProject project) throws CoreException {
+		IProjectDescription desc = project.getDescription();
+		desc.setVariants(new String[] {variant0, variant1});
+		project.setDescription(desc, getMonitor());
+	}
+
+	public void testSetAndGetProjectReferences() throws CoreException {
 		IProjectDescription desc = project0.getDescription();
 		desc.setReferencedProjects(new IProject[] {project3, project1});
 		desc.setDynamicReferences(new IProject[] {project1, project2});
@@ -56,6 +78,23 @@ public class ProjectReferencesTest extends ResourceTest {
 		assertArraysEqual(new IProject[] {project1, project2}, desc.getDynamicReferences());
 		assertArraysEqual(new IProject[] {project3, project1, project2}, project0.getReferencedProjects());
 		assertArraysEqual(new IProject[] {project1, project3}, project0.getReferencingProjects());
+	}
+
+	public void testSetAndGetProjectVariantReferences() throws CoreException {
+		IProjectVariant a = project3.getVariant(variant0);
+		IProjectVariant b = project2.getVariant(variant1);
+		IProjectVariant c = project1.getVariant(variant0);
+		IProjectVariant d = project3.getVariant(variant1);
+		IProjectVariant e = project1.getVariant(variant0);
+		IProjectVariant f = project2.getVariant(variant0);
+		IProjectDescription desc = project0.getDescription();
+		desc.setReferencedProjectVariants(variant0, new IProjectVariant[] {a, b});
+		desc.setDynamicVariantReferences(variant0, new IProjectVariant[] {c});
+		desc.setReferencedProjectVariants(variant1, new IProjectVariant[] {d, e});
+		desc.setDynamicVariantReferences(variant1, new IProjectVariant[] {f});
+		project0.setDescription(desc, getMonitor());
+		assertArraysEqual(new IProjectVariant[] {a, b, c}, project0.getReferencedProjectVariants(variant0));
+		assertArraysEqual(new IProjectVariant[] {d, e, f}, project0.getReferencingProjectVariants(variant1));
 	}
 
 	private void assertArraysEqual(Object[] expected, Object[] actual) {
