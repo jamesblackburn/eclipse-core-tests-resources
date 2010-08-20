@@ -761,6 +761,67 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		assertEquals("5.0", 0, commands2[0].getArguments().size());
 	}
 
+	public void testProjectDescriptionVariants() throws Throwable {
+		IFileStore tempStore = getTempStore();
+		URI location = tempStore.toURI();
+		/* test write */
+		ProjectDescription description = new ProjectDescription();
+		description.setLocationURI(location);
+		description.setName("MyProjectDescription");
+		String[] variants = new String[] {"Variant0", "Variant1", "Variant2"};
+		description.setVariants(variants);
+
+		writeDescription(tempStore, description);
+
+		/* test read */
+		ProjectDescription description2 = readDescription(tempStore);
+		assertTrue("1.0", description.getName().equals(description2.getName()));
+		assertEquals("2.0", location, description.getLocationURI());
+
+		String[] variants2 = description2.getVariants();
+		assertEquals("3.0", 3, variants2.length);
+		assertEquals("3.1", variants2[0], variants[0]);
+		assertEquals("3.2", variants2[1], variants[1]);
+		assertEquals("3.3", variants2[2], variants[2]);
+	}
+
+	public void testProjectDescriptionVariantReferences() throws Throwable {
+		IFileStore tempStore = getTempStore();
+		URI location = tempStore.toURI();
+		/* test write */
+		IProject project0 = getWorkspace().getRoot().getProject("Project0");
+		IProject project1 = getWorkspace().getRoot().getProject("Project1");
+		ProjectDescription description = new ProjectDescription();
+		description.setLocationURI(location);
+		description.setName("MyProjectDescription");
+		String[] variants = new String[] {"Variant0", "Variant1", "Variant2"};
+		description.setVariants(variants);
+		for (int i = 0; i < 3; i++) {
+			IProjectVariant[] refs = new IProjectVariant[] {new ProjectVariant(project0, variants[i]), new ProjectVariant(project1, variants[i])};
+			description.setReferencedProjectVariants(variants[i], refs);
+		}
+
+		writeDescription(tempStore, description);
+
+		/* test read */
+		ProjectDescription description2 = readDescription(tempStore);
+		assertTrue("1.0", description.getName().equals(description2.getName()));
+		assertEquals("2.0", location, description.getLocationURI());
+
+		String[] variants2 = description2.getVariants();
+		assertEquals("3.0", 3, variants2.length);
+		assertEquals("3.1", variants2[0], variants[0]);
+		assertEquals("3.2", variants2[1], variants[1]);
+		assertEquals("3.3", variants2[2], variants[2]);
+
+		for (int i = 0; i < 3; i++) {
+			IProjectVariant[] refs = description2.getReferencedProjectVariants(variants[i]);
+			assertEquals((i + 4) + ".0", 2, refs.length);
+			assertEquals((i + 4) + ".1", new ProjectVariant(project0, variants[i]), refs[0]);
+			assertEquals((i + 4) + ".2", new ProjectVariant(project1, variants[i]), refs[1]);
+		}
+	}
+
 	public void testProjectDescriptionWithSpaces() throws Throwable {
 
 		IFileStore store = getTempStore();
