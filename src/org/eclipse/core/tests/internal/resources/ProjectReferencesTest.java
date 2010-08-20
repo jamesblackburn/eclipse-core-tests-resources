@@ -39,6 +39,7 @@ public class ProjectReferencesTest extends ResourceTest {
 	private IProjectVariant project3v1;
 	private String variant0 = "Variant0";
 	private String variant1 = "Variant1";
+	private String nonExistantVariant = "foo";
 
 	public ProjectReferencesTest(String name) {
 		super(name);
@@ -150,5 +151,23 @@ public class ProjectReferencesTest extends ResourceTest {
 		assertEquals("2.3", new IProjectVariant[] {project1v1, project2v0}, project0.getReferencedProjectVariants(variant1));
 		assertEquals("2.4", new IProjectVariant[] {project1v0, project2v1}, project0.getReferencingProjectVariants(variant0));
 		assertEquals("2.5", new IProjectVariant[] {project1v0, project3v0}, project0.getReferencingProjectVariants(variant1));
+	}
+
+	public void testAddReferencesToNonExistantVariant() throws CoreException {
+		IProjectDescription desc = project0.getDescription();
+
+		assertFalse("1.0", desc.hasVariant(nonExistantVariant));
+		assertFalse("1.1", project0.hasVariant(nonExistantVariant));
+
+		desc.setReferencedProjectVariants(nonExistantVariant, new IProjectVariant[] {project1v0});
+		desc.setDynamicVariantReferences(nonExistantVariant, new IProjectVariant[] {project1v0});
+		project0.setDescription(desc, getMonitor());
+
+		assertFalse("2.0", desc.hasVariant(nonExistantVariant));
+		assertFalse("2.1", project0.hasVariant(nonExistantVariant));
+
+		assertNull("3.0", desc.getReferencedProjectVariants(nonExistantVariant));
+		assertNull("3.1", desc.getDynamicVariantReferences(nonExistantVariant));
+		assertNull("3.2", project0.getReferencedProjectVariants(nonExistantVariant));
 	}
 }
