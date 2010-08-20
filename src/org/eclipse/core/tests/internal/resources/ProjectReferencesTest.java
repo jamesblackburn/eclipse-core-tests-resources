@@ -28,7 +28,6 @@ public class ProjectReferencesTest extends ResourceTest {
 	private IProject project1;
 	private IProject project2;
 	private IProject project3;
-	private IProject closedProject;
 	private String variant0 = "Variant0";
 	private String variant1 = "Variant1";
 
@@ -41,14 +40,11 @@ public class ProjectReferencesTest extends ResourceTest {
 		project1 = getWorkspace().getRoot().getProject("Project1");
 		project2 = getWorkspace().getRoot().getProject("Project2");
 		project3 = getWorkspace().getRoot().getProject("Project3");
-		closedProject = getWorkspace().getRoot().getProject("Project4");
 		setUpVariants(project0);
 		setUpVariants(project1);
 		setUpVariants(project2);
 		setUpVariants(project3);
-		setUpVariants(closedProject);
-		ensureExistsInWorkspace(new IProject[] {project0, project1, project2, project3, closedProject}, true);
-		closedProject.close(getMonitor());
+		ensureExistsInWorkspace(new IProject[] {project0, project1, project2, project3}, true);
 	}
 
 	private void setUpVariants(IProject project) throws CoreException {
