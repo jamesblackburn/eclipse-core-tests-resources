@@ -60,9 +60,13 @@ public class ProjectVariantsTest extends ResourceTest {
 		assertFalse("2.5", project.hasVariant(variantId2));
 
 		assertEquals("3.0", variants[0], project.getActiveVariant());
-		project.setActiveVariant(variantId1);
+		desc = project.getDescription();
+		desc.setActiveVariant(variantId1);
+		project.setDescription(desc, getMonitor());
 		assertEquals("3.1", variants[1], project.getActiveVariant());
-		project.setActiveVariant(variantId2);
+		desc = project.getDescription();
+		desc.setActiveVariant(variantId2);
+		project.setDescription(desc, getMonitor());
 		assertEquals("3.2", variants[1], project.getActiveVariant());
 
 		IProjectVariant variant = project.getVariant(variantId0);
@@ -105,7 +109,9 @@ public class ProjectVariantsTest extends ResourceTest {
 		assertTrue("1.2", project.hasVariant(IProjectDescription.DEFAULT_VARIANT));
 
 		assertEquals("2.0", defaultVariant, project.getActiveVariant());
-		project.setActiveVariant(IProjectDescription.DEFAULT_VARIANT);
+		desc = project.getDescription();
+		desc.setActiveVariant(IProjectDescription.DEFAULT_VARIANT);
+		project.setDescription(desc, getMonitor());
 		assertEquals("2.1", defaultVariant, project.getActiveVariant());
 	}
 
@@ -118,7 +124,9 @@ public class ProjectVariantsTest extends ResourceTest {
 		desc.setVariants(new String[] {variantId0, variantId2});
 		project.setDescription(desc, getMonitor());
 		assertEquals("2.0", variant0, project.getActiveVariant());
-		project.setActiveVariant(variantId2);
+		desc = project.getDescription();
+		desc.setActiveVariant(variantId2);
+		project.setDescription(desc, getMonitor());
 		desc.setVariants(new String[] {variantId0, variantId1});
 		project.setDescription(desc, getMonitor());
 		assertEquals("3.0", variant0, project.getActiveVariant());
