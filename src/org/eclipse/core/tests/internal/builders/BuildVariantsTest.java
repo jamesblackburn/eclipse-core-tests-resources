@@ -100,17 +100,18 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 		incrementalBuild(3, project0, variant2, true, 1, IncrementalProjectBuilder.FULL_BUILD);
 
 		project0.close(getMonitor());
+		VariantBuilder.clearStats();
 		project0.open(getMonitor());
 
-		// Project variants a 'private' in a project description (so are not written to .project)
+		// Project variants are 'private' in a project description (so are not written to .project)
 		// The client is responsible for saving and restoring them.
 		IProjectDescription desc = project0.getDescription();
 		desc.setVariants(new String[] {variant0, variant1, variant2});
 		project0.setDescription(desc, getMonitor());
 
-		incrementalBuild(4, project0, variant0, false, 1, 0);
-		incrementalBuild(5, project0, variant1, false, 1, 0);
-		incrementalBuild(6, project0, variant2, false, 1, 0);
+		incrementalBuild(4, project0, variant0, false, 0, 0);
+		incrementalBuild(5, project0, variant1, false, 0, 0);
+		incrementalBuild(6, project0, variant2, false, 0, 0);
 	}
 
 	/**
@@ -128,8 +129,12 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	public void testBuildReferences() throws CoreException {
 		VariantBuilder.clearStats();
 		VariantBuilder.clearBuildOrder();
-		project0.setActiveVariant(variant0);
-		project1.setActiveVariant(variant0);
+		IProjectDescription desc = project0.getDescription();
+		desc.setActiveVariant(variant0);
+		project0.setDescription(desc, getMonitor());
+		desc = project1.getDescription();
+		desc.setActiveVariant(variant0);
+		project1.setDescription(desc, getMonitor());
 
 		// Note: references are not alphabetically ordered to check that references are sorted into a stable order
 		setReferences(project0, variant0, new IProjectVariant[] {project0.getVariant(variant1), project1.getVariant(variant2), project1.getVariant(variant0)});
@@ -188,7 +193,9 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 * Run an incremental build for the given project variant, and check the behaviour of the build.
 	 */
 	private void incrementalBuild(int testId, IProject project, String variant, boolean shouldBuild, int expectedCount, int expectedTrigger) throws CoreException {
-		project.setActiveVariant(variant);
+		IProjectDescription desc = project.getDescription();
+		desc.setActiveVariant(variant);
+		project.setDescription(desc, getMonitor());
 		project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, getMonitor());
 		checkBuild(testId, project, variant, shouldBuild, expectedCount, expectedTrigger);
 	}
@@ -197,7 +204,9 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 * Clean the specified project variant.
 	 */
 	private void clean(int testId, IProject project, String variant, int expectedCount) throws CoreException {
-		project.setActiveVariant(variant);
+		IProjectDescription desc = project.getDescription();
+		desc.setActiveVariant(variant);
+		project.setDescription(desc, getMonitor());
 		project.build(IncrementalProjectBuilder.CLEAN_BUILD, getMonitor());
 		VariantBuilder builder = VariantBuilder.getBuilder(project.getVariant(variant));
 		assertNotNull(testId + ".0", builder);
