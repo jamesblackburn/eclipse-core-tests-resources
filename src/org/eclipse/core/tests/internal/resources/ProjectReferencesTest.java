@@ -170,4 +170,13 @@ public class ProjectReferencesTest extends ResourceTest {
 		assertNull("3.1", desc.getDynamicVariantReferences(nonExistantVariant));
 		assertNull("3.2", project0.getReferencedProjectVariants(nonExistantVariant));
 	}
+
+	public void testReferencesToActiveVariants() throws CoreException {
+		IProjectDescription desc = project0.getDescription();
+		desc.setReferencedProjectVariants(variant0, new IProjectVariant[] {new ProjectVariant(project1)});
+		project0.setDescription(desc, getMonitor());
+
+		assertEquals("1.0", new IProjectVariant[] {new ProjectVariant(project1)}, desc.getReferencedProjectVariants(variant0));
+		assertEquals("1.0", new IProjectVariant[] {new ProjectVariant(project1)}, project0.getReferencedProjectVariants(variant0));
+	}
 }
