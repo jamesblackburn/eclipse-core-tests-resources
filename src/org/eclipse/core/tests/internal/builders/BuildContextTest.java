@@ -15,6 +15,7 @@ import java.util.Comparator;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.eclipse.core.internal.events.BuildContext;
+import org.eclipse.core.internal.resources.ProjectVariant;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
@@ -190,6 +191,26 @@ public class BuildContextTest extends AbstractBuilderTest {
 		context = ContextBuilder.getBuilder(project2.getActiveVariant()).contextForLastBuild;
 		assertEquals(0, context.getAllReferencedProjects().length);
 		assertEquals(0, context.getAllReferencingProjects().length);
+	}
+
+	public void testReferenceActiveVariant() throws CoreException {
+		setReferences(project0, project0.getActiveVariant().getVariant(), new IProjectVariant[] {new ProjectVariant(project1)});
+		setReferences(project1, project1.getActiveVariant().getVariant(), new IProjectVariant[] {new ProjectVariant(project2)});
+		setReferences(project2, project2.getActiveVariant().getVariant(), new IProjectVariant[] {});
+
+		ContextBuilder.clearStats();
+
+		getWorkspace().build(new IProject[] {project0}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+
+		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
+		assertArraysContainSameElements(new IProject[] {project1, project2}, context.getAllReferencedProjects());
+		assertEquals(0, context.getAllReferencingProjects().length);
+		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
+		assertArraysContainSameElements(new IProject[] {project2}, context.getAllReferencedProjects());
+		assertArraysContainSameElements(new IProject[] {project0}, context.getAllReferencingProjects());
+		context = ContextBuilder.getBuilder(project2.getActiveVariant()).contextForLastBuild;
+		assertEquals(0, context.getAllReferencedProjects().length);
+		assertArraysContainSameElements(new IProject[] {project0, project1}, context.getAllReferencingProjects());
 	}
 
 	private void setupSimpleReferences() throws CoreException {
