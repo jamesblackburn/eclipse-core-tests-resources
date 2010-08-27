@@ -60,14 +60,14 @@ public class VariantBuilder extends TestBuilder {
 	protected IProject[] build(int kind, Map args, IProgressMonitor monitor) throws CoreException {
 		buildCount++;
 		triggerForLastBuild = kind;
-		deltaForLastBuild = getDelta(getProjectVariant());
+		deltaForLastBuild = getDelta(getProject());
 		buildOrder.add(getProjectVariant());
 		return super.build(kind, args, monitor);
 	}
 
 	protected void clean(IProgressMonitor monitor) throws CoreException {
 		super.clean(monitor);
-		IResourceDelta delta = getDelta(getProjectVariant());
+		IResourceDelta delta = getDelta(getProject());
 		Assert.assertNull(delta);
 		buildCount++;
 		triggerForLastBuild = IncrementalProjectBuilder.CLEAN_BUILD;

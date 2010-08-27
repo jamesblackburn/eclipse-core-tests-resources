@@ -15,7 +15,7 @@ import java.util.Comparator;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.eclipse.core.internal.events.BuildContext;
-import org.eclipse.core.internal.resources.ProjectVariant;
+import org.eclipse.core.internal.resources.ProjectVariantReference;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
@@ -74,7 +74,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 		desc.setBuildSpec(new ICommand[] {command});
 
 		// Create variants
-		desc.setVariants(new String[] {variant0, variant1});
+		desc.setVariants(new IProjectVariant[] {desc.newVariant(variant0), desc.newVariant(variant1)});
 
 		project.setDescription(desc, getMonitor());
 	}
@@ -96,19 +96,19 @@ public class BuildContextTest extends AbstractBuilderTest {
 		IProjectVariant p2v0 = project2.getVariant(variant0);
 		IProjectVariant p2v1 = project2.getVariant(variant1);
 		IProjectVariant p3v0 = project3.getVariant(variant0);
-		//IProjectVariant p3v1 = project3.getVariant(variant1);
+		IProjectVariant p3v1 = project3.getVariant(variant1);
 		IProjectVariant p4v0 = project4.getVariant(variant0);
 		IProjectVariant p4v1 = project4.getVariant(variant1);
-		setReferences(project0, variant0, new IProjectVariant[] {p0v1, p1v1, p4v0});
-		setReferences(project0, variant1, new IProjectVariant[] {p1v0, p2v0});
-		setReferences(project1, variant0, new IProjectVariant[] {p2v1});
-		setReferences(project1, variant1, new IProjectVariant[] {p2v1, p4v1});
-		setReferences(project2, variant0, new IProjectVariant[] {p3v0});
-		setReferences(project2, variant1, new IProjectVariant[] {});
-		setReferences(project3, variant0, new IProjectVariant[] {p0v1, p2v0, p2v1});
-		setReferences(project3, variant1, new IProjectVariant[] {p0v0, p3v0});
-		setReferences(project4, variant0, new IProjectVariant[] {p0v0, p4v1});
-		setReferences(project4, variant1, new IProjectVariant[] {p1v1});
+		setReferences(p0v0, new IProjectVariant[] {p0v1, p1v1, p4v0});
+		setReferences(p0v1, new IProjectVariant[] {p1v0, p2v0});
+		setReferences(p1v0, new IProjectVariant[] {p2v1});
+		setReferences(p1v1, new IProjectVariant[] {p2v1, p4v1});
+		setReferences(p2v0, new IProjectVariant[] {p3v0});
+		setReferences(p2v1, new IProjectVariant[] {});
+		setReferences(p3v0, new IProjectVariant[] {p0v1, p2v0, p2v1});
+		setReferences(p3v1, new IProjectVariant[] {p0v0, p3v0});
+		setReferences(p4v0, new IProjectVariant[] {p0v0, p4v1});
+		setReferences(p4v1, new IProjectVariant[] {p1v1});
 
 		// Create build order
 		final IProjectVariant[] buildOrder = new IProjectVariant[] {p2v1, p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1, p4v0};
@@ -166,7 +166,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 	public void testWorkspaceBuildProject() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
-		getWorkspace().build(project0, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
 		assertArraysContainSameElements(new IProject[] {project1, project2}, context.getAllReferencedProjects());
 		assertEquals(0, context.getAllReferencingProjects().length);
@@ -181,7 +181,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 	public void testWorkspaceBuildProjects() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
-		getWorkspace().build(new IProject[] {project0, project2}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant(), project2.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
 		assertArraysContainSameElements(new IProject[] {project1}, context.getAllReferencedProjects());
 		assertArraysContainSameElements(new IProject[] {}, context.getAllReferencingProjects());
@@ -194,13 +194,13 @@ public class BuildContextTest extends AbstractBuilderTest {
 	}
 
 	public void testReferenceActiveVariant() throws CoreException {
-		setReferences(project0, project0.getActiveVariant().getVariant(), new IProjectVariant[] {new ProjectVariant(project1)});
-		setReferences(project1, project1.getActiveVariant().getVariant(), new IProjectVariant[] {new ProjectVariant(project2)});
-		setReferences(project2, project2.getActiveVariant().getVariant(), new IProjectVariant[] {});
+		setReferences(project0.getActiveVariant(), new IProjectVariantReference[] {new ProjectVariantReference(project1)});
+		setReferences(project1.getActiveVariant(), new IProjectVariantReference[] {new ProjectVariantReference(project2)});
+		setReferences(project2.getActiveVariant(), new IProjectVariantReference[] {});
 
 		ContextBuilder.clearStats();
 
-		getWorkspace().build(new IProject[] {project0}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
 
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
 		assertArraysContainSameElements(new IProject[] {project1, project2}, context.getAllReferencedProjects());
@@ -213,19 +213,57 @@ public class BuildContextTest extends AbstractBuilderTest {
 		assertArraysContainSameElements(new IProject[] {project0, project1}, context.getAllReferencingProjects());
 	}
 
+	/**
+	 * Attempts to build a project that references the active variant of another project,
+	 * and the same variant directly. This should only result in one referenced variant being built.
+	 */
+	public void testReferenceVariantTwice() throws CoreException {
+		IProjectVariantReference ref1 = project1.newReference();
+		IProjectVariantReference ref2 = project1.newReference();
+		ref2.setVariantName(project1.getActiveVariant().getVariantName());
+		setReferences(project0.getActiveVariant(), new IProjectVariantReference[] {ref1, ref2});
+		setReferences(project1.getActiveVariant(), new IProjectVariantReference[] {});
+
+		ContextBuilder.clearStats();
+
+		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+
+		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
+		assertArraysContainSameElements(new IProject[] {project1}, context.getAllReferencedProjects());
+		assertEquals(0, context.getAllReferencingProjects().length);
+		assertArraysContainSameElements(new IProjectVariant[] {project1.getActiveVariant()}, context.getAllReferencedProjectVariants());
+		assertEquals(0, context.getAllReferencingProjectVariants().length);
+
+		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
+		assertEquals(0, context.getAllReferencedProjects().length);
+		assertArraysContainSameElements(new IProject[] {project0}, context.getAllReferencingProjects());
+		assertEquals(0, context.getAllReferencedProjectVariants().length);
+		assertArraysContainSameElements(new IProjectVariant[] {project0.getActiveVariant()}, context.getAllReferencingProjectVariants());
+	}
+
 	private void setupSimpleReferences() throws CoreException {
-		setReferences(project0, project0.getActiveVariant().getVariant(), new IProjectVariant[] {project1.getActiveVariant()});
-		setReferences(project1, project1.getActiveVariant().getVariant(), new IProjectVariant[] {project2.getActiveVariant()});
-		setReferences(project2, project2.getActiveVariant().getVariant(), new IProjectVariant[] {});
+		setReferences(project0.getActiveVariant(), new IProjectVariant[] {project1.getActiveVariant()});
+		setReferences(project1.getActiveVariant(), new IProjectVariant[] {project2.getActiveVariant()});
+		setReferences(project2.getActiveVariant(), new IProjectVariant[] {});
 	}
 
 	/**
 	 * Helper method to set the references for a project.
 	 */
-	private void setReferences(IProject project, String variant, IProjectVariant[] refs) throws CoreException {
-		IProjectDescription desc = project.getDescription();
-		desc.setReferencedProjectVariants(variant, refs);
-		project.setDescription(desc, getMonitor());
+	private void setReferences(IProjectVariant variant, IProjectVariantReference[] refs) throws CoreException {
+		IProjectDescription desc = variant.getProject().getDescription();
+		desc.setReferencedProjectVariants(variant.getVariantName(), refs);
+		variant.getProject().setDescription(desc, getMonitor());
+	}
+
+	/**
+	 * Helper method to set the references for a project.
+	 */
+	private void setReferences(IProjectVariant variant, IProjectVariant[] variants) throws CoreException {
+		IProjectVariantReference[] refs = new IProjectVariantReference[variants.length];
+		for (int i = 0; i < variants.length; i++)
+			refs[i] = new ProjectVariantReference(variants[i]);
+		setReferences(variant, refs);
 	}
 
 	private void assertArraysContainSameElements(IProjectVariant[] expected, IProjectVariant[] actual) {
@@ -235,7 +273,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 				IProjectVariant rightV = (IProjectVariant) right;
 				int ret = leftV.getProject().getName().compareTo(rightV.getProject().getName());
 				if (ret == 0)
-					ret = leftV.getVariant().compareTo(rightV.getVariant());
+					ret = leftV.getVariantName().compareTo(rightV.getVariantName());
 				return ret;
 			}
 		});
