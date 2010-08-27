@@ -11,6 +11,7 @@ package org.eclipse.core.tests.internal.builders;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.eclipse.core.internal.resources.ProjectVariantReference;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
@@ -65,7 +66,7 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 		desc.setBuildSpec(new ICommand[] {command});
 
 		// Create variants
-		desc.setVariants(new String[] {variant0, variant1, variant2});
+		desc.setVariants(new IProjectVariant[] {desc.newVariant(variant0), desc.newVariant(variant1), desc.newVariant(variant2)});
 
 		project.setDescription(desc, getMonitor());
 	}
@@ -106,7 +107,7 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 		// Project variants are 'private' in a project description (so are not written to .project)
 		// The client is responsible for saving and restoring them.
 		IProjectDescription desc = project0.getDescription();
-		desc.setVariants(new String[] {variant0, variant1, variant2});
+		desc.setVariants(new IProjectVariant[] {desc.newVariant(variant0), desc.newVariant(variant1), desc.newVariant(variant2)});
 		project0.setDescription(desc, getMonitor());
 
 		incrementalBuild(4, project0, variant0, false, 0, 0);
@@ -183,8 +184,11 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	/**
 	 * Helper method to set the references for a project.
 	 */
-	private void setReferences(IProject project, String variant, IProjectVariant[] refs) throws CoreException {
+	private void setReferences(IProject project, String variant, IProjectVariant[] variants) throws CoreException {
 		IProjectDescription desc = project.getDescription();
+		IProjectVariantReference[] refs = new IProjectVariantReference[variants.length];
+		for (int i = 0; i < variants.length; i++)
+			refs[i] = new ProjectVariantReference(variants[i]);
 		desc.setReferencedProjectVariants(variant, refs);
 		project.setDescription(desc, getMonitor());
 	}
@@ -218,7 +222,11 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 * Check the behaviour of a build
 	 */
 	private void checkBuild(int testId, IProject project, String variant, boolean shouldBuild, int expectedCount, int expectedTrigger) throws CoreException {
-		assertTrue(testId + ".0", project.getDescription().hasVariant(variant));
+		try {
+			project.getVariant(variant);
+		} catch (CoreException e) {
+			fail(testId + ".0");
+		}
 		VariantBuilder builder = VariantBuilder.getBuilder(project.getVariant(variant));
 		if (builder == null) {
 			assertFalse(testId + ".1", shouldBuild);

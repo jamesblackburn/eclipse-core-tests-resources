@@ -768,7 +768,7 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		ProjectDescription description = new ProjectDescription();
 		description.setLocationURI(location);
 		description.setName("MyProjectDescription");
-		String[] variants = new String[] {"Variant0", "Variant1", "Variant2"};
+		IProjectVariant[] variants = new IProjectVariant[] {description.newVariant("Variant0"), description.newVariant("Variant1"), description.newVariant("Variant2")};
 		description.setVariants(variants);
 
 		writeDescription(tempStore, description);
@@ -778,7 +778,7 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		assertTrue("1.0", description.getName().equals(description2.getName()));
 		assertEquals("2.0", location, description.getLocationURI());
 
-		String[] variants2 = description2.getVariants();
+		IProjectVariant[] variants2 = description2.internalGetVariants(false);
 		assertEquals("3.0", 3, variants2.length);
 		assertEquals("3.1", variants2[0], variants[0]);
 		assertEquals("3.2", variants2[1], variants[1]);
@@ -794,11 +794,15 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		ProjectDescription description = new ProjectDescription();
 		description.setLocationURI(location);
 		description.setName("MyProjectDescription");
-		String[] variants = new String[] {"Variant0", "Variant1", "Variant2"};
+		IProjectVariant[] variants = new IProjectVariant[] {description.newVariant("Variant0"), description.newVariant("Variant1"), description.newVariant("Variant2")};
 		description.setVariants(variants);
 		for (int i = 0; i < 3; i++) {
-			IProjectVariant[] refs = new IProjectVariant[] {new ProjectVariant(project0, variants[i]), new ProjectVariant(project1, variants[i])};
-			description.setReferencedProjectVariants(variants[i], refs);
+			IProjectVariantReference[] refs = new IProjectVariantReference[2];
+			refs[0] = project0.newReference();
+			refs[0].setVariantName("Variant0");
+			refs[1] = project1.newReference();
+			refs[1].setVariantName("Variant1");
+			description.setReferencedProjectVariants(variants[i].getVariantName(), refs);
 		}
 
 		writeDescription(tempStore, description);
@@ -808,17 +812,22 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		assertTrue("1.0", description.getName().equals(description2.getName()));
 		assertEquals("2.0", location, description.getLocationURI());
 
-		String[] variants2 = description2.getVariants();
+		IProjectVariant[] variants2 = description2.internalGetVariants(false);
 		assertEquals("3.0", 3, variants2.length);
 		assertEquals("3.1", variants2[0], variants[0]);
 		assertEquals("3.2", variants2[1], variants[1]);
 		assertEquals("3.3", variants2[2], variants[2]);
 
 		for (int i = 0; i < 3; i++) {
-			IProjectVariant[] refs = description2.getReferencedProjectVariants(variants[i]);
+			IProjectVariantReference[] refs = description2.getReferencedProjectVariants(variants[i].getVariantName());
+			IProjectVariantReference[] refs2 = new IProjectVariantReference[2];
+			refs2[0] = project0.newReference();
+			refs2[0].setVariantName("Variant0");
+			refs2[1] = project1.newReference();
+			refs2[1].setVariantName("Variant1");
 			assertEquals((i + 4) + ".0", 2, refs.length);
-			assertEquals((i + 4) + ".1", new ProjectVariant(project0, variants[i]), refs[0]);
-			assertEquals((i + 4) + ".2", new ProjectVariant(project1, variants[i]), refs[1]);
+			assertEquals((i + 4) + ".1", refs2[0], refs[0]);
+			assertEquals((i + 4) + ".2", refs2[1], refs[1]);
 		}
 	}
 

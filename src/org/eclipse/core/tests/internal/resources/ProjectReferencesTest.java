@@ -13,6 +13,7 @@ package org.eclipse.core.tests.internal.resources;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.eclipse.core.internal.resources.ProjectVariant;
+import org.eclipse.core.internal.resources.ProjectVariantReference;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.tests.resources.ResourceTest;
@@ -37,6 +38,14 @@ public class ProjectReferencesTest extends ResourceTest {
 	private IProjectVariant project2v1;
 	private IProjectVariant project3v0;
 	private IProjectVariant project3v1;
+	private IProjectVariantReference project0v0r;
+	private IProjectVariantReference project0v1r;
+	private IProjectVariantReference project1v0r;
+	private IProjectVariantReference project1v1r;
+	private IProjectVariantReference project2v0r;
+	private IProjectVariantReference project2v1r;
+	private IProjectVariantReference project3v0r;
+	private IProjectVariantReference project3v1r;
 	private String variant0 = "Variant0";
 	private String variant1 = "Variant1";
 	private String nonExistantVariant = "foo";
@@ -63,11 +72,19 @@ public class ProjectReferencesTest extends ResourceTest {
 		project2v1 = new ProjectVariant(project2, variant1);
 		project3v0 = new ProjectVariant(project3, variant0);
 		project3v1 = new ProjectVariant(project3, variant1);
+		project0v0r = new ProjectVariantReference(project0v0);
+		project0v1r = new ProjectVariantReference(project0v1);
+		project1v0r = new ProjectVariantReference(project1v0);
+		project1v1r = new ProjectVariantReference(project1v1);
+		project2v0r = new ProjectVariantReference(project2v0);
+		project2v1r = new ProjectVariantReference(project2v1);
+		project3v0r = new ProjectVariantReference(project3v0);
+		project3v1r = new ProjectVariantReference(project3v1);
 	}
 
 	private void setUpVariants(IProject project) throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setVariants(new String[] {variant0, variant1});
+		desc.setVariants(new IProjectVariant[] {desc.newVariant(variant0), desc.newVariant(variant1)});
 		project.setDescription(desc, getMonitor());
 	}
 
@@ -97,86 +114,88 @@ public class ProjectReferencesTest extends ResourceTest {
 		desc = project0.getDescription();
 		assertEquals("1.0", new IProject[] {project3, project1}, desc.getReferencedProjects());
 		assertEquals("1.1", new IProject[] {project1, project2}, desc.getDynamicReferences());
-		assertEquals("1.2", new IProjectVariant[] {project3v0, project3v1, project1v0, project1v1}, desc.getReferencedProjectVariants(variant0));
-		assertEquals("1.3", new IProjectVariant[] {project1v0, project1v1, project2v0, project2v1}, desc.getDynamicVariantReferences(variant0));
+		assertEquals("1.2", new IProjectVariantReference[] {project3v0r, project3v1r, project1v0r, project1v1r}, desc.getReferencedProjectVariants(variant0));
+		assertEquals("1.3", new IProjectVariantReference[] {project1v0r, project1v1r, project2v0r, project2v1r}, desc.getDynamicVariantReferences(variant0));
 
 		assertEquals("2.0", new IProject[] {project3, project1, project2}, project0.getReferencedProjects());
 		assertEquals("2.1", new IProject[] {project1, project3}, project0.getReferencingProjects());
-		assertEquals("2.2", new IProjectVariant[] {project3v0, project3v1, project1v0, project1v1, project2v0, project2v1}, project0.getReferencedProjectVariants(variant0));
-		assertEquals("2.3", new IProjectVariant[] {project1v0, project1v1, project3v0, project3v1}, project0.getReferencingProjectVariants(variant0));
+		assertEquals("2.2", new IProjectVariant[] {project3v0, project3v1, project1v0, project1v1, project2v0, project2v1}, project0.getReferencedProjectVariants(project0v0));
+		assertEquals("2.3", new IProjectVariant[] {project1v0, project1v1, project3v0, project3v1}, project0.getReferencingProjectVariants(project0v0));
 	}
 
 	public void testSetAndGetProjectVariantReferences() throws CoreException {
 		// Set project variant references
 		IProjectDescription desc = project0.getDescription();
-		desc.setReferencedProjectVariants(variant0, new IProjectVariant[] {project1v0});
-		desc.setDynamicVariantReferences(variant0, new IProjectVariant[] {project2v0, project1v0});
-		desc.setReferencedProjectVariants(variant1, new IProjectVariant[] {project1v1});
-		desc.setDynamicVariantReferences(variant1, new IProjectVariant[] {project2v0});
+		desc.setReferencedProjectVariants(variant0, new IProjectVariantReference[] {project1v0r});
+		desc.setDynamicVariantReferences(variant0, new IProjectVariantReference[] {project2v0r, project1v0r});
+		desc.setReferencedProjectVariants(variant1, new IProjectVariantReference[] {project1v1r});
+		desc.setDynamicVariantReferences(variant1, new IProjectVariantReference[] {project2v0r});
 		project0.setDescription(desc, getMonitor());
 
 		desc = project1.getDescription();
-		desc.setReferencedProjectVariants(variant0, new IProjectVariant[] {project0v0});
-		desc.setDynamicVariantReferences(variant0, new IProjectVariant[] {project0v1});
-		desc.setReferencedProjectVariants(variant1, new IProjectVariant[] {});
-		desc.setDynamicVariantReferences(variant1, new IProjectVariant[] {});
+		desc.setReferencedProjectVariants(variant0, new IProjectVariantReference[] {project0v0r});
+		desc.setDynamicVariantReferences(variant0, new IProjectVariantReference[] {project0v1r});
+		desc.setReferencedProjectVariants(variant1, new IProjectVariantReference[] {});
+		desc.setDynamicVariantReferences(variant1, new IProjectVariantReference[] {});
 		project1.setDescription(desc, getMonitor());
 
 		desc = project2.getDescription();
-		desc.setReferencedProjectVariants(variant0, new IProjectVariant[] {});
-		desc.setDynamicVariantReferences(variant0, new IProjectVariant[] {});
-		desc.setReferencedProjectVariants(variant1, new IProjectVariant[] {project0v0});
-		desc.setDynamicVariantReferences(variant1, new IProjectVariant[] {});
+		desc.setReferencedProjectVariants(variant0, new IProjectVariantReference[] {});
+		desc.setDynamicVariantReferences(variant0, new IProjectVariantReference[] {});
+		desc.setReferencedProjectVariants(variant1, new IProjectVariantReference[] {project0v0r});
+		desc.setDynamicVariantReferences(variant1, new IProjectVariantReference[] {});
 		project2.setDescription(desc, getMonitor());
 
 		desc = project3.getDescription();
-		desc.setReferencedProjectVariants(variant0, new IProjectVariant[] {});
-		desc.setDynamicVariantReferences(variant0, new IProjectVariant[] {project0v1});
-		desc.setReferencedProjectVariants(variant1, new IProjectVariant[] {});
-		desc.setDynamicVariantReferences(variant1, new IProjectVariant[] {});
+		desc.setReferencedProjectVariants(variant0, new IProjectVariantReference[] {});
+		desc.setDynamicVariantReferences(variant0, new IProjectVariantReference[] {project0v1r});
+		desc.setReferencedProjectVariants(variant1, new IProjectVariantReference[] {});
+		desc.setDynamicVariantReferences(variant1, new IProjectVariantReference[] {});
 		project3.setDescription(desc, getMonitor());
 
 		// Check getters
 		desc = project0.getDescription();
 		assertEquals("1.0", new IProject[] {project1}, desc.getReferencedProjects());
 		assertEquals("1.1", new IProject[] {project2, project1}, desc.getDynamicReferences());
-		assertEquals("1.2", new IProjectVariant[] {project1v0}, desc.getReferencedProjectVariants(variant0));
-		assertEquals("1.3", new IProjectVariant[] {project2v0, project1v0}, desc.getDynamicVariantReferences(variant0));
-		assertEquals("1.4", new IProjectVariant[] {project1v1}, desc.getReferencedProjectVariants(variant1));
-		assertEquals("1.5", new IProjectVariant[] {project2v0}, desc.getDynamicVariantReferences(variant1));
+		assertEquals("1.2", new IProjectVariantReference[] {project1v0r}, desc.getReferencedProjectVariants(variant0));
+		assertEquals("1.3", new IProjectVariantReference[] {project2v0r, project1v0r}, desc.getDynamicVariantReferences(variant0));
+		assertEquals("1.4", new IProjectVariantReference[] {project1v1r}, desc.getReferencedProjectVariants(variant1));
+		assertEquals("1.5", new IProjectVariantReference[] {project2v0r}, desc.getDynamicVariantReferences(variant1));
 
 		assertEquals("2.0", new IProject[] {project1, project2}, project0.getReferencedProjects());
 		assertEquals("2.1", new IProject[] {project1, project2, project3}, project0.getReferencingProjects());
-		assertEquals("2.2", new IProjectVariant[] {project1v0, project2v0}, project0.getReferencedProjectVariants(variant0));
-		assertEquals("2.3", new IProjectVariant[] {project1v1, project2v0}, project0.getReferencedProjectVariants(variant1));
-		assertEquals("2.4", new IProjectVariant[] {project1v0, project2v1}, project0.getReferencingProjectVariants(variant0));
-		assertEquals("2.5", new IProjectVariant[] {project1v0, project3v0}, project0.getReferencingProjectVariants(variant1));
+		assertEquals("2.2", new IProjectVariant[] {project1v0, project2v0}, project0.getReferencedProjectVariants(project0v0));
+		assertEquals("2.3", new IProjectVariant[] {project1v1, project2v0}, project0.getReferencedProjectVariants(project0v1));
+		assertEquals("2.4", new IProjectVariant[] {project1v0, project2v1}, project0.getReferencingProjectVariants(project0v0));
+		assertEquals("2.5", new IProjectVariant[] {project1v0, project3v0}, project0.getReferencingProjectVariants(project0v1));
 	}
 
 	public void testAddReferencesToNonExistantVariant() throws CoreException {
 		IProjectDescription desc = project0.getDescription();
 
-		assertFalse("1.0", desc.hasVariant(nonExistantVariant));
-		assertFalse("1.1", project0.hasVariant(nonExistantVariant));
+		assertFalse("1.0", project0.hasVariant(desc.newVariant(nonExistantVariant)));
 
-		desc.setReferencedProjectVariants(nonExistantVariant, new IProjectVariant[] {project1v0});
-		desc.setDynamicVariantReferences(nonExistantVariant, new IProjectVariant[] {project1v0});
+		desc.setReferencedProjectVariants(nonExistantVariant, new IProjectVariantReference[] {project1v0r});
+		desc.setDynamicVariantReferences(nonExistantVariant, new IProjectVariantReference[] {project1v0r});
 		project0.setDescription(desc, getMonitor());
 
-		assertFalse("2.0", desc.hasVariant(nonExistantVariant));
-		assertFalse("2.1", project0.hasVariant(nonExistantVariant));
+		assertFalse("2.0", project0.hasVariant(desc.newVariant(nonExistantVariant)));
 
-		assertNull("3.0", desc.getReferencedProjectVariants(nonExistantVariant));
-		assertNull("3.1", desc.getDynamicVariantReferences(nonExistantVariant));
-		assertNull("3.2", project0.getReferencedProjectVariants(nonExistantVariant));
+		assertEquals("3.0", new IProjectVariantReference[0], desc.getReferencedProjectVariants(nonExistantVariant));
+		assertEquals("3.1", new IProjectVariantReference[0], desc.getDynamicVariantReferences(nonExistantVariant));
+		try {
+			project0.getReferencedProjectVariants(desc.newVariant(nonExistantVariant));
+			fail("3.2");
+		} catch (CoreException e) {
+		}
 	}
 
 	public void testReferencesToActiveVariants() throws CoreException {
 		IProjectDescription desc = project0.getDescription();
-		desc.setReferencedProjectVariants(variant0, new IProjectVariant[] {new ProjectVariant(project1)});
+		desc.setReferencedProjectVariants(variant0, new IProjectVariantReference[] {project1.newReference()});
 		project0.setDescription(desc, getMonitor());
 
-		assertEquals("1.0", new IProjectVariant[] {new ProjectVariant(project1)}, desc.getReferencedProjectVariants(variant0));
-		assertEquals("1.0", new IProjectVariant[] {new ProjectVariant(project1)}, project0.getReferencedProjectVariants(variant0));
+		assertEquals("1.0", new IProjectVariantReference[] {new ProjectVariantReference(project1)}, desc.getReferencedProjectVariants(variant0));
+		assertEquals("1.0", new IProjectVariant[] {project1v0}, project0.getReferencedProjectVariants(project0v0));
 	}
 }
