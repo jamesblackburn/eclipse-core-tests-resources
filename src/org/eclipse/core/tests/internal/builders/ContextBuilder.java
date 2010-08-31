@@ -32,6 +32,9 @@ public class ContextBuilder extends TestBuilder {
 	private boolean getRuleCalledForLastBuild = false;
 	private IBuildContext contextForLastBuildInGetRule = null;
 
+	private IProjectVariant projectVariantForLastBuild = null;
+	private IProjectVariant projectVariantForLastBuildInGetRule = null;
+
 	public ContextBuilder() {
 	}
 
@@ -48,6 +51,8 @@ public class ContextBuilder extends TestBuilder {
 			ContextBuilder builder = (ContextBuilder) it.next();
 			if (builder.getRuleCalledForLastBuild && !builder.contextForLastBuild.equals(builder.contextForLastBuildInGetRule))
 				return false;
+			if (builder.getRuleCalledForLastBuild && !builder.projectVariantForLastBuild.equals(builder.projectVariantForLastBuildInGetRule))
+				return false;
 		}
 		return true;
 	}
@@ -57,6 +62,8 @@ public class ContextBuilder extends TestBuilder {
 			ContextBuilder builder = (ContextBuilder) it.next();
 			builder.contextForLastBuild = null;
 			builder.contextForLastBuildInGetRule = null;
+			builder.projectVariantForLastBuild = null;
+			builder.projectVariantForLastBuildInGetRule = null;
 			builder.getRuleCalledForLastBuild = false;
 			builder.triggerForLastBuild = 0;
 		}
@@ -69,6 +76,7 @@ public class ContextBuilder extends TestBuilder {
 	protected IProject[] build(int kind, Map args, IProgressMonitor monitor) throws CoreException {
 		contextForLastBuild = getContext();
 		triggerForLastBuild = kind;
+		projectVariantForLastBuild = getProjectVariant();
 		return super.build(kind, args, monitor);
 	}
 
@@ -76,6 +84,7 @@ public class ContextBuilder extends TestBuilder {
 		super.clean(monitor);
 		contextForLastBuild = getContext();
 		triggerForLastBuild = IncrementalProjectBuilder.CLEAN_BUILD;
+		projectVariantForLastBuild = getProjectVariant();
 	}
 
 	/*
@@ -85,6 +94,7 @@ public class ContextBuilder extends TestBuilder {
 	public ISchedulingRule getRule(int kind, Map args) {
 		getRuleCalledForLastBuild = true;
 		contextForLastBuildInGetRule = getContext();
+		projectVariantForLastBuildInGetRule = getProjectVariant();
 		return super.getRule(kind, args);
 	}
 }
