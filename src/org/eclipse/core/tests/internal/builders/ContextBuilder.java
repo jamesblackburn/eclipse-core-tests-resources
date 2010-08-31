@@ -14,6 +14,7 @@ import java.util.*;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 
 /**
  * A builder used that stores the context information passed to it.
@@ -21,12 +22,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 public class ContextBuilder extends TestBuilder {
 	public static final String BUILDER_NAME = "org.eclipse.core.tests.resources.contextbuilder";
 
-	/** Stores IProjectVariant -> VariantBuilder */
+	/** Stores IProjectVariant -> ContextBuilder */
 	private static HashMap builders = new HashMap();
 	/** The context information for the last run of this builder */
 	IBuildContext contextForLastBuild = null;
 	/** The trigger for the last run of this builder */
 	int triggerForLastBuild = 0;
+
+	private boolean getRuleCalledForLastBuild = false;
+	private IBuildContext contextForLastBuildInGetRule = null;
 
 	public ContextBuilder() {
 	}
@@ -39,10 +43,21 @@ public class ContextBuilder extends TestBuilder {
 		return getBuilder(variant).contextForLastBuild;
 	}
 
+	public static boolean checkValid() {
+		for (Iterator it = builders.values().iterator(); it.hasNext();) {
+			ContextBuilder builder = (ContextBuilder) it.next();
+			if (builder.getRuleCalledForLastBuild && !builder.contextForLastBuild.equals(builder.contextForLastBuildInGetRule))
+				return false;
+		}
+		return true;
+	}
+
 	public static void clearStats() {
 		for (Iterator it = builders.values().iterator(); it.hasNext();) {
 			ContextBuilder builder = (ContextBuilder) it.next();
 			builder.contextForLastBuild = null;
+			builder.contextForLastBuildInGetRule = null;
+			builder.getRuleCalledForLastBuild = false;
 			builder.triggerForLastBuild = 0;
 		}
 	}
@@ -61,5 +76,15 @@ public class ContextBuilder extends TestBuilder {
 		super.clean(monitor);
 		contextForLastBuild = getContext();
 		triggerForLastBuild = IncrementalProjectBuilder.CLEAN_BUILD;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see IncrementalProjectBuilder#getRule(int, Map)
+	 */
+	public ISchedulingRule getRule(int kind, Map args) {
+		getRuleCalledForLastBuild = true;
+		contextForLastBuildInGetRule = getContext();
+		return super.getRule(kind, args);
 	}
 }

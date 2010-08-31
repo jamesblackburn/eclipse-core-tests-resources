@@ -156,6 +156,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
 		project0.build(IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		assertTrue(ContextBuilder.checkValid());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
 		assertEquals(0, context.getAllReferencedProjects().length);
 		assertEquals(0, context.getAllReferencingProjects().length);
@@ -167,6 +168,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
 		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		assertTrue(ContextBuilder.checkValid());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
 		assertArraysContainSameElements(new IProject[] {project1, project2}, context.getAllReferencedProjects());
 		assertEquals(0, context.getAllReferencingProjects().length);
@@ -182,6 +184,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
 		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant(), project2.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		assertTrue(ContextBuilder.checkValid());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
 		assertArraysContainSameElements(new IProject[] {project1}, context.getAllReferencedProjects());
 		assertArraysContainSameElements(new IProject[] {}, context.getAllReferencingProjects());
@@ -201,6 +204,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 		ContextBuilder.clearStats();
 
 		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		assertTrue(ContextBuilder.checkValid());
 
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
 		assertArraysContainSameElements(new IProject[] {project1, project2}, context.getAllReferencedProjects());
@@ -227,6 +231,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 		ContextBuilder.clearStats();
 
 		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		assertTrue(ContextBuilder.checkValid());
 
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
 		assertArraysContainSameElements(new IProject[] {project1}, context.getAllReferencedProjects());
