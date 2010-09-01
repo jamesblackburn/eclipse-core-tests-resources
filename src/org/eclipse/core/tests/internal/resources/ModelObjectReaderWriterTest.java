@@ -388,7 +388,7 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		String locationB = getTempDir().append("testPath1").toPortableString();
 		String newline = System.getProperty("line.separator");
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + newline + "<projectDescription>" + newline + "	<name>MyProjectDescription</name>" + newline + "	<comment></comment>" + newline + "	<references>" + newline + "	</references>" + newline + "	<projects>" + newline + "	</projects>" + newline + "	<buildSpec>" + newline + "		<buildCommand>" + newline + "			<name>MyCommand</name>" + newline + "			<arguments>" + newline + "				<dictionary>" + newline + "					<key>aA</key>" + newline + "					<value>2 x ARGH!</value>" + newline + "				</dictionary>" + newline + "				<dictionary>" + newline + "					<key>b</key>" + newline + "					<value>ARGH!</value>" + newline + "				</dictionary>" + newline + "			</arguments>" + newline + "		</buildCommand>" + newline + "	</buildSpec>"
-				+ newline + "	<natures>" + newline + "	</natures>" + newline + "	<variants>" + newline + "		<variant></variant>" + newline + "	</variants>" + newline + "	<linkedResources>" + newline + "		<link>" + newline + "			<name>pathA</name>" + newline + "			<type>2</type>" + newline + "			<location>" + locationA + "</location>" + newline + "		</link>" + newline + "		<link>" + newline + "			<name>pathB</name>" + newline + "			<type>2</type>" + newline + "			<location>" + locationB + "</location>" + newline + "		</link>" + newline + "	</linkedResources>" + newline + "</projectDescription>" + newline;
+				+ newline + "	<natures>" + newline + "	</natures>" + newline + "	<variants>" + newline + "		<variant active=\"true\"></variant>" + newline + "	</variants>" + newline + "	<linkedResources>" + newline + "		<link>" + newline + "			<name>pathA</name>" + newline + "			<type>2</type>" + newline + "			<location>" + locationA + "</location>" + newline + "		</link>" + newline + "		<link>" + newline + "			<name>pathB</name>" + newline + "			<type>2</type>" + newline + "			<location>" + locationB + "</location>" + newline + "		</link>" + newline + "	</linkedResources>" + newline + "</projectDescription>" + newline;
 
 		IFileStore tempStore = getTempStore();
 		URI location = tempStore.toURI();
@@ -783,6 +783,26 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		assertEquals("3.1", variants2[0], variants[0]);
 		assertEquals("3.2", variants2[1], variants[1]);
 		assertEquals("3.3", variants2[2], variants[2]);
+	}
+
+	public void testProjectDescriptionActiveVariant() throws Throwable {
+		IFileStore tempStore = getTempStore();
+		URI location = tempStore.toURI();
+		/* test write */
+		ProjectDescription description = new ProjectDescription();
+		description.setLocationURI(location);
+		description.setName("MyProjectDescription");
+		IProjectVariant[] variants = new IProjectVariant[] {description.newVariant("Variant0"), description.newVariant("Variant1"), description.newVariant("Variant2")};
+		description.setVariants(variants);
+		description.setActiveVariant("Variant1");
+
+		writeDescription(tempStore, description);
+
+		/* test read */
+		ProjectDescription description2 = readDescription(tempStore);
+		assertTrue("1.0", description.getName().equals(description2.getName()));
+		assertEquals("2.0", location, description.getLocationURI());
+		assertEquals("3.0", variants[1], description2.internalGetActiveVariant(false));
 	}
 
 	public void testProjectDescriptionVariantReferences() throws Throwable {
