@@ -104,12 +104,6 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 		VariantBuilder.clearStats();
 		project0.open(getMonitor());
 
-		// Project variants are 'private' in a project description (so are not written to .project)
-		// The client is responsible for saving and restoring them.
-		IProjectDescription desc = project0.getDescription();
-		desc.setVariants(new IProjectVariant[] {desc.newVariant(variant0), desc.newVariant(variant1), desc.newVariant(variant2)});
-		project0.setDescription(desc, getMonitor());
-
 		incrementalBuild(4, project0, variant0, false, 0, 0);
 		incrementalBuild(5, project0, variant1, false, 0, 0);
 		incrementalBuild(6, project0, variant2, false, 0, 0);
