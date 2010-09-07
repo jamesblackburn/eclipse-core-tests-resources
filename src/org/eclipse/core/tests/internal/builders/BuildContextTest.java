@@ -116,84 +116,84 @@ public class BuildContextTest extends AbstractBuilderTest {
 		IBuildContext context;
 
 		context = new BuildContext(p2v1, buildOrder);
-		assertArraysContainSameElements(new IProjectVariant[] {}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements(new IProjectVariant[] {p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1, p4v0}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("1.0", new IProjectVariant[] {}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements("1.1", new IProjectVariant[] {p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1, p4v0}, context.getAllReferencingProjectVariants());
 
 		context = new BuildContext(p1v0, buildOrder);
-		assertArraysContainSameElements(new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p0v1, p2v0, p3v0, p4v0}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("2.0", new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements("2.1", new IProjectVariant[] {p0v0, p0v1, p2v0, p3v0, p4v0}, context.getAllReferencingProjectVariants());
 
 		context = new BuildContext(p1v1, buildOrder);
-		assertArraysContainSameElements(new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p4v0, p4v1}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("3.0", new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements("3.1", new IProjectVariant[] {p0v0, p4v0, p4v1}, context.getAllReferencingProjectVariants());
 
 		context = new BuildContext(p3v0, buildOrder);
-		assertArraysContainSameElements(new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p0v1, p2v0, p4v0}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("4.0", new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements("4.1", new IProjectVariant[] {p0v0, p0v1, p2v0, p4v0}, context.getAllReferencingProjectVariants());
 
 		context = new BuildContext(p2v0, buildOrder);
-		assertArraysContainSameElements(new IProjectVariant[] {p2v1, p3v0}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p0v1, p4v0}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("5.0", new IProjectVariant[] {p2v1, p3v0}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements("5.1", new IProjectVariant[] {p0v0, p0v1, p4v0}, context.getAllReferencingProjectVariants());
 
 		context = new BuildContext(p0v1, buildOrder);
-		assertArraysContainSameElements(new IProjectVariant[] {p2v1, p1v0, p3v0, p2v0}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements(new IProjectVariant[] {p0v0, p4v0}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("6.0", new IProjectVariant[] {p2v1, p1v0, p3v0, p2v0}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements("6.1", new IProjectVariant[] {p0v0, p4v0}, context.getAllReferencingProjectVariants());
 
 		context = new BuildContext(p0v0, buildOrder);
-		assertArraysContainSameElements(new IProjectVariant[] {p0v1, p1v0, p1v1, p2v0, p2v1, p3v0}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements(new IProjectVariant[] {p4v0}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("7.0", new IProjectVariant[] {p0v1, p1v0, p1v1, p2v0, p2v1, p3v0}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements("7.1", new IProjectVariant[] {p4v0}, context.getAllReferencingProjectVariants());
 
 		context = new BuildContext(p4v1, buildOrder);
-		assertArraysContainSameElements(new IProjectVariant[] {p1v1, p2v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements(new IProjectVariant[] {p4v0}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("8.0", new IProjectVariant[] {p1v1, p2v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements("8.1", new IProjectVariant[] {p4v0}, context.getAllReferencingProjectVariants());
 
 		context = new BuildContext(p4v0, buildOrder);
-		assertArraysContainSameElements(new IProjectVariant[] {p2v1, p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements(new IProjectVariant[] {}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("9.0", new IProjectVariant[] {p2v1, p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1}, context.getAllReferencedProjectVariants());
+		assertArraysContainSameElements("9.1", new IProjectVariant[] {}, context.getAllReferencingProjectVariants());
 	}
 
 	public void testProjectBuild() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
 		project0.build(IncrementalProjectBuilder.FULL_BUILD, getMonitor());
-		assertTrue(ContextBuilder.checkValid());
+		assertTrue("1.0", ContextBuilder.checkValid());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
-		assertEquals(0, context.getAllReferencedProjects().length);
-		assertEquals(0, context.getAllReferencingProjects().length);
-		assertEquals(0, context.getAllReferencedProjectVariants().length);
-		assertEquals(0, context.getAllReferencingProjectVariants().length);
+		assertEquals("2.0", 0, context.getAllReferencedProjects().length);
+		assertEquals("2.1", 0, context.getAllReferencingProjects().length);
+		assertEquals("2.2", 0, context.getAllReferencedProjectVariants().length);
+		assertEquals("2.3", 0, context.getAllReferencingProjectVariants().length);
 	}
 
 	public void testWorkspaceBuildProject() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
 		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
-		assertTrue(ContextBuilder.checkValid());
+		assertTrue("1.0", ContextBuilder.checkValid());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
-		assertArraysContainSameElements(new IProject[] {project1, project2}, context.getAllReferencedProjects());
-		assertEquals(0, context.getAllReferencingProjects().length);
+		assertArraysContainSameElements("2.0", new IProject[] {project1, project2}, context.getAllReferencedProjects());
+		assertEquals("2.1", 0, context.getAllReferencingProjects().length);
 		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
-		assertArraysContainSameElements(new IProject[] {project2}, context.getAllReferencedProjects());
-		assertArraysContainSameElements(new IProject[] {project0}, context.getAllReferencingProjects());
+		assertArraysContainSameElements("3.0", new IProject[] {project2}, context.getAllReferencedProjects());
+		assertArraysContainSameElements("3.1", new IProject[] {project0}, context.getAllReferencingProjects());
 		context = ContextBuilder.getBuilder(project2.getActiveVariant()).contextForLastBuild;
-		assertEquals(0, context.getAllReferencedProjects().length);
-		assertArraysContainSameElements(new IProject[] {project0, project1}, context.getAllReferencingProjects());
+		assertEquals("4.0", 0, context.getAllReferencedProjects().length);
+		assertArraysContainSameElements("4.1", new IProject[] {project0, project1}, context.getAllReferencingProjects());
 	}
 
 	public void testWorkspaceBuildProjects() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
 		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant(), project2.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
-		assertTrue(ContextBuilder.checkValid());
+		assertTrue("1.0", ContextBuilder.checkValid());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
-		assertArraysContainSameElements(new IProject[] {project1}, context.getAllReferencedProjects());
-		assertArraysContainSameElements(new IProject[] {}, context.getAllReferencingProjects());
+		assertArraysContainSameElements("2.0", new IProject[] {project1}, context.getAllReferencedProjects());
+		assertArraysContainSameElements("2.1", new IProject[] {}, context.getAllReferencingProjects());
 		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
-		assertArraysContainSameElements(new IProject[] {}, context.getAllReferencedProjects());
-		assertArraysContainSameElements(new IProject[] {project0}, context.getAllReferencingProjects());
+		assertArraysContainSameElements("3.0", new IProject[] {}, context.getAllReferencedProjects());
+		assertArraysContainSameElements("3.1", new IProject[] {project0}, context.getAllReferencingProjects());
 		context = ContextBuilder.getBuilder(project2.getActiveVariant()).contextForLastBuild;
-		assertEquals(0, context.getAllReferencedProjects().length);
-		assertEquals(0, context.getAllReferencingProjects().length);
+		assertEquals("4.0", 0, context.getAllReferencedProjects().length);
+		assertEquals("4.1", 0, context.getAllReferencingProjects().length);
 	}
 
 	public void testReferenceActiveVariant() throws CoreException {
@@ -204,17 +204,17 @@ public class BuildContextTest extends AbstractBuilderTest {
 		ContextBuilder.clearStats();
 
 		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
-		assertTrue(ContextBuilder.checkValid());
+		assertTrue("1.0", ContextBuilder.checkValid());
 
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
-		assertArraysContainSameElements(new IProject[] {project1, project2}, context.getAllReferencedProjects());
-		assertEquals(0, context.getAllReferencingProjects().length);
+		assertArraysContainSameElements("2.0", new IProject[] {project1, project2}, context.getAllReferencedProjects());
+		assertEquals("2.1", 0, context.getAllReferencingProjects().length);
 		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
-		assertArraysContainSameElements(new IProject[] {project2}, context.getAllReferencedProjects());
-		assertArraysContainSameElements(new IProject[] {project0}, context.getAllReferencingProjects());
+		assertArraysContainSameElements("3.0", new IProject[] {project2}, context.getAllReferencedProjects());
+		assertArraysContainSameElements("3.1", new IProject[] {project0}, context.getAllReferencingProjects());
 		context = ContextBuilder.getBuilder(project2.getActiveVariant()).contextForLastBuild;
-		assertEquals(0, context.getAllReferencedProjects().length);
-		assertArraysContainSameElements(new IProject[] {project0, project1}, context.getAllReferencingProjects());
+		assertEquals("4.0", 0, context.getAllReferencedProjects().length);
+		assertArraysContainSameElements("4.1", new IProject[] {project0, project1}, context.getAllReferencingProjects());
 	}
 
 	/**
@@ -231,19 +231,19 @@ public class BuildContextTest extends AbstractBuilderTest {
 		ContextBuilder.clearStats();
 
 		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
-		assertTrue(ContextBuilder.checkValid());
+		assertTrue("1.0", ContextBuilder.checkValid());
 
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
-		assertArraysContainSameElements(new IProject[] {project1}, context.getAllReferencedProjects());
-		assertEquals(0, context.getAllReferencingProjects().length);
-		assertArraysContainSameElements(new IProjectVariant[] {project1.getActiveVariant()}, context.getAllReferencedProjectVariants());
-		assertEquals(0, context.getAllReferencingProjectVariants().length);
+		assertArraysContainSameElements("2.0", new IProject[] {project1}, context.getAllReferencedProjects());
+		assertEquals("2.1", 0, context.getAllReferencingProjects().length);
+		assertArraysContainSameElements("2.2", new IProjectVariant[] {project1.getActiveVariant()}, context.getAllReferencedProjectVariants());
+		assertEquals("2.3", 0, context.getAllReferencingProjectVariants().length);
 
 		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
-		assertEquals(0, context.getAllReferencedProjects().length);
-		assertArraysContainSameElements(new IProject[] {project0}, context.getAllReferencingProjects());
-		assertEquals(0, context.getAllReferencedProjectVariants().length);
-		assertArraysContainSameElements(new IProjectVariant[] {project0.getActiveVariant()}, context.getAllReferencingProjectVariants());
+		assertEquals("3.0", 0, context.getAllReferencedProjects().length);
+		assertArraysContainSameElements("3.1", new IProject[] {project0}, context.getAllReferencingProjects());
+		assertEquals("3.2", 0, context.getAllReferencedProjectVariants().length);
+		assertArraysContainSameElements("3.3", new IProjectVariant[] {project0.getActiveVariant()}, context.getAllReferencingProjectVariants());
 	}
 
 	private void setupSimpleReferences() throws CoreException {
@@ -271,8 +271,8 @@ public class BuildContextTest extends AbstractBuilderTest {
 		setReferences(variant, refs);
 	}
 
-	private void assertArraysContainSameElements(IProjectVariant[] expected, IProjectVariant[] actual) {
-		assertArraysContainSameElements(expected, actual, new Comparator() {
+	private void assertArraysContainSameElements(String id, IProjectVariant[] expected, IProjectVariant[] actual) {
+		assertArraysContainSameElements(id, expected, actual, new Comparator() {
 			public int compare(Object left, Object right) {
 				IProjectVariant leftV = (IProjectVariant) left;
 				IProjectVariant rightV = (IProjectVariant) right;
@@ -284,8 +284,8 @@ public class BuildContextTest extends AbstractBuilderTest {
 		});
 	}
 
-	private void assertArraysContainSameElements(IProject[] expected, IProject[] actual) {
-		assertArraysContainSameElements(expected, actual, new Comparator() {
+	private void assertArraysContainSameElements(String id, IProject[] expected, IProject[] actual) {
+		assertArraysContainSameElements(id, expected, actual, new Comparator() {
 			public int compare(Object left, Object right) {
 				return ((IProject) left).getName().compareTo(((IProject) right).getName());
 			}
@@ -293,11 +293,11 @@ public class BuildContextTest extends AbstractBuilderTest {
 	}
 
 	/** Helper method to check if two project variant arrays contain the same elements, but in any order */
-	private void assertArraysContainSameElements(Object[] expected, Object[] actual, Comparator comparator) {
-		assertEquals(expected.length, actual.length);
+	private void assertArraysContainSameElements(String id, Object[] expected, Object[] actual, Comparator comparator) {
+		assertEquals(id, expected.length, actual.length);
 		Arrays.sort(expected, comparator);
 		Arrays.sort(actual, comparator);
 		for (int i = 0; i < expected.length; i++)
-			assertEquals(expected[i], actual[i]);
+			assertEquals(id, expected[i], actual[i]);
 	}
 }
