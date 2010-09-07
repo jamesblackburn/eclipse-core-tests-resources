@@ -1,12 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2010 IBM Corporation and others.
+ * Copyright (c) 2010 Broadcom Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
  * Contributors:
- *     IBM Corporation - initial API and implementation
+ * Broadcom Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.core.tests.internal.resources;
 
@@ -110,37 +110,4 @@ public class ProjectVariantsTest extends ResourceTest {
 		project.setDescription(desc, getMonitor());
 		assertEquals("3.0", variant0, project.getActiveVariant());
 	}
-
-	//	public void testTranslateActiveVariants() throws CoreException {
-	//		IProjectVariantManager mngr = getWorkspace().getProjectVariantManager();
-	//
-	//		IProjectDescription desc = project.getDescription();
-	//		desc.setVariants(new String[] {variantId0, variantId1});
-	//		project.setDescription(desc, getMonitor());
-	//
-	//		IProjectVariant[] variants = new IProjectVariant[2];
-	//		IProjectVariant[] expectedVariants = new IProjectVariant[2];
-	//
-	//		// Check that actual variants are unmodified
-	//		variants[0] = mngr.createProjectVariant(project, variantId0);
-	//		variants[1] = mngr.createProjectVariant(project, variantId1);
-	//		expectedVariants[0] = mngr.createProjectVariant(project, variantId0);
-	//		expectedVariants[1] = variants[1];
-	//		assertEquals("1.0", expectedVariants, mngr.translateActiveVariants(variants));
-	//
-	//		// Check that active variant is translated
-	//		variants[0] = mngr.createProjectVariant(project, null);
-	//		variants[1] = mngr.createProjectVariant(project, variantId1);
-	//		expectedVariants[0] = mngr.createProjectVariant(project, variantId0);
-	//		expectedVariants[1] = variants[1];
-	//		assertEquals("2.0", expectedVariants, mngr.translateActiveVariants(variants));
-	//
-	//		// Check that active variant for inaccessible project is removed
-	//		IProject nonexistant = getWorkspace().getRoot().getProject("nonexistant");
-	//		assertDoesNotExistInWorkspace(nonexistant);
-	//		variants[0] = mngr.createProjectVariant(nonexistant, null);
-	//		variants[1] = mngr.createProjectVariant(project, variantId1);
-	//		expectedVariants = new IProjectVariant[] {variants[1]};
-	//		assertEquals("3.0", expectedVariants, mngr.translateActiveVariants(variants));
-	//	}
 }
