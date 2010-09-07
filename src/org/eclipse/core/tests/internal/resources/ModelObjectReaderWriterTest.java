@@ -387,8 +387,8 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		String locationA = getTempDir().append("testPath1").toPortableString();
 		String locationB = getTempDir().append("testPath1").toPortableString();
 		String newline = System.getProperty("line.separator");
-		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + newline + "<projectDescription>" + newline + "	<name>MyProjectDescription</name>" + newline + "	<comment></comment>" + newline + "	<projects>" + newline + "	</projects>" + newline + "	<buildSpec>" + newline + "		<buildCommand>" + newline + "			<name>MyCommand</name>" + newline + "			<arguments>" + newline + "				<dictionary>" + newline + "					<key>aA</key>" + newline + "					<value>2 x ARGH!</value>" + newline + "				</dictionary>" + newline + "				<dictionary>" + newline + "					<key>b</key>" + newline + "					<value>ARGH!</value>" + newline + "				</dictionary>" + newline + "			</arguments>" + newline + "		</buildCommand>" + newline + "	</buildSpec>" + newline + "	<natures>" + newline + "	</natures>" + newline
-				+ "	<linkedResources>" + newline + "		<link>" + newline + "			<name>pathA</name>" + newline + "			<type>2</type>" + newline + "			<location>" + locationA + "</location>" + newline + "		</link>" + newline + "		<link>" + newline + "			<name>pathB</name>" + newline + "			<type>2</type>" + newline + "			<location>" + locationB + "</location>" + newline + "		</link>" + newline + "	</linkedResources>" + newline + "</projectDescription>" + newline;
+		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + newline + "<projectDescription>" + newline + "	<name>MyProjectDescription</name>" + newline + "	<comment></comment>" + newline + "	<references>" + newline + "	</references>" + newline + "	<projects>" + newline + "	</projects>" + newline + "	<buildSpec>" + newline + "		<buildCommand>" + newline + "			<name>MyCommand</name>" + newline + "			<arguments>" + newline + "				<dictionary>" + newline + "					<key>aA</key>" + newline + "					<value>2 x ARGH!</value>" + newline + "				</dictionary>" + newline + "				<dictionary>" + newline + "					<key>b</key>" + newline + "					<value>ARGH!</value>" + newline + "				</dictionary>" + newline + "			</arguments>" + newline + "		</buildCommand>" + newline + "	</buildSpec>"
+				+ newline + "	<natures>" + newline + "	</natures>" + newline + "	<variants>" + newline + "		<variant active=\"true\"></variant>" + newline + "	</variants>" + newline + "	<linkedResources>" + newline + "		<link>" + newline + "			<name>pathA</name>" + newline + "			<type>2</type>" + newline + "			<location>" + locationA + "</location>" + newline + "		</link>" + newline + "		<link>" + newline + "			<name>pathB</name>" + newline + "			<type>2</type>" + newline + "			<location>" + locationB + "</location>" + newline + "		</link>" + newline + "	</linkedResources>" + newline + "</projectDescription>" + newline;
 
 		IFileStore tempStore = getTempStore();
 		URI location = tempStore.toURI();
@@ -759,6 +759,96 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		assertEquals("3.0", 1, commands2.length);
 		assertEquals("4.0", "MyCommand", commands2[0].getBuilderName());
 		assertEquals("5.0", 0, commands2[0].getArguments().size());
+	}
+
+	public void testProjectDescriptionVariants() throws Throwable {
+		IFileStore tempStore = getTempStore();
+		URI location = tempStore.toURI();
+		/* test write */
+		ProjectDescription description = new ProjectDescription();
+		description.setLocationURI(location);
+		description.setName("MyProjectDescription");
+		IProjectVariant[] variants = new IProjectVariant[] {description.newVariant("Variant0"), description.newVariant("Variant1"), description.newVariant("Variant2")};
+		description.setVariants(variants);
+
+		writeDescription(tempStore, description);
+
+		/* test read */
+		ProjectDescription description2 = readDescription(tempStore);
+		assertTrue("1.0", description.getName().equals(description2.getName()));
+		assertEquals("2.0", location, description.getLocationURI());
+
+		IProjectVariant[] variants2 = description2.internalGetVariants(false);
+		assertEquals("3.0", 3, variants2.length);
+		assertEquals("3.1", variants2[0], variants[0]);
+		assertEquals("3.2", variants2[1], variants[1]);
+		assertEquals("3.3", variants2[2], variants[2]);
+	}
+
+	public void testProjectDescriptionActiveVariant() throws Throwable {
+		IFileStore tempStore = getTempStore();
+		URI location = tempStore.toURI();
+		/* test write */
+		ProjectDescription description = new ProjectDescription();
+		description.setLocationURI(location);
+		description.setName("MyProjectDescription");
+		IProjectVariant[] variants = new IProjectVariant[] {description.newVariant("Variant0"), description.newVariant("Variant1"), description.newVariant("Variant2")};
+		description.setVariants(variants);
+		description.setActiveVariant("Variant1");
+
+		writeDescription(tempStore, description);
+
+		/* test read */
+		ProjectDescription description2 = readDescription(tempStore);
+		assertTrue("1.0", description.getName().equals(description2.getName()));
+		assertEquals("2.0", location, description.getLocationURI());
+		assertEquals("3.0", variants[1], description2.internalGetActiveVariant(false));
+	}
+
+	public void testProjectDescriptionVariantReferences() throws Throwable {
+		IFileStore tempStore = getTempStore();
+		URI location = tempStore.toURI();
+		/* test write */
+		IProject project0 = getWorkspace().getRoot().getProject("Project0");
+		IProject project1 = getWorkspace().getRoot().getProject("Project1");
+		ProjectDescription description = new ProjectDescription();
+		description.setLocationURI(location);
+		description.setName("MyProjectDescription");
+		IProjectVariant[] variants = new IProjectVariant[] {description.newVariant("Variant0"), description.newVariant("Variant1"), description.newVariant("Variant2")};
+		description.setVariants(variants);
+		for (int i = 0; i < 3; i++) {
+			IProjectVariantReference[] refs = new IProjectVariantReference[2];
+			refs[0] = project0.newReference();
+			refs[0].setVariantName("Variant0");
+			refs[1] = project1.newReference();
+			refs[1].setVariantName("Variant1");
+			description.setReferencedProjectVariants(variants[i].getVariantName(), refs);
+		}
+
+		writeDescription(tempStore, description);
+
+		/* test read */
+		ProjectDescription description2 = readDescription(tempStore);
+		assertTrue("1.0", description.getName().equals(description2.getName()));
+		assertEquals("2.0", location, description.getLocationURI());
+
+		IProjectVariant[] variants2 = description2.internalGetVariants(false);
+		assertEquals("3.0", 3, variants2.length);
+		assertEquals("3.1", variants2[0], variants[0]);
+		assertEquals("3.2", variants2[1], variants[1]);
+		assertEquals("3.3", variants2[2], variants[2]);
+
+		for (int i = 0; i < 3; i++) {
+			IProjectVariantReference[] refs = description2.getReferencedProjectVariants(variants[i].getVariantName());
+			IProjectVariantReference[] refs2 = new IProjectVariantReference[2];
+			refs2[0] = project0.newReference();
+			refs2[0].setVariantName("Variant0");
+			refs2[1] = project1.newReference();
+			refs2[1].setVariantName("Variant1");
+			assertEquals((i + 4) + ".0", 2, refs.length);
+			assertEquals((i + 4) + ".1", refs2[0], refs[0]);
+			assertEquals((i + 4) + ".2", refs2[1], refs[1]);
+		}
 	}
 
 	public void testProjectDescriptionWithSpaces() throws Throwable {

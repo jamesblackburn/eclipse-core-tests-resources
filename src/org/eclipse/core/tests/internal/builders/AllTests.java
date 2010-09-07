@@ -32,6 +32,8 @@ public class AllTests extends TestCase {
 		suite.addTest(EmptyDeltaTest.suite());
 		suite.addTest(MultiProjectBuildTest.suite());
 		suite.addTest(RelaxedSchedRuleBuilderTest.suite());
+		suite.addTest(BuildVariantsTest.suite());
+		suite.addTest(BuildContextTest.suite());
 		return suite;
 	}
 }
