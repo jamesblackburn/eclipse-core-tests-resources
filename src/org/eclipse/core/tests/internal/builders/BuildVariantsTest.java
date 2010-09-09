@@ -191,10 +191,7 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 * Run an incremental build for the given project variant, and check the behaviour of the build.
 	 */
 	private void incrementalBuild(int testId, IProject project, String variant, boolean shouldBuild, int expectedCount, int expectedTrigger) throws CoreException {
-		IProjectDescription desc = project.getDescription();
-		desc.setActiveVariant(variant);
-		project.setDescription(desc, getMonitor());
-		project.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, getMonitor());
+		project.build(project.getVariant(variant), IncrementalProjectBuilder.INCREMENTAL_BUILD, getMonitor());
 		checkBuild(testId, project, variant, shouldBuild, expectedCount, expectedTrigger);
 	}
 
