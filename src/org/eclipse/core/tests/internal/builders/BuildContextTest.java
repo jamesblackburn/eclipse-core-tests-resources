@@ -44,11 +44,11 @@ public class BuildContextTest extends AbstractBuilderTest {
 		super.setUp();
 		// Create resources
 		IWorkspaceRoot root = getWorkspace().getRoot();
-		project0 = root.getProject("Project0");
-		project1 = root.getProject("Project1");
-		project2 = root.getProject("Project2");
-		project3 = root.getProject("Project3");
-		project4 = root.getProject("Project4");
+		project0 = root.getProject("BuildContextTests_p0");
+		project1 = root.getProject("BuildContextTests_p1");
+		project2 = root.getProject("BuildContextTests_p2");
+		project3 = root.getProject("BuildContextTests_p3");
+		project4 = root.getProject("BuildContextTests_p4");
 		IResource[] resources = {project0, project1, project2, project3, project4};
 		ensureExistsInWorkspace(resources, true);
 		setAutoBuilding(false);
@@ -57,6 +57,17 @@ public class BuildContextTest extends AbstractBuilderTest {
 		setupProject(project2);
 		setupProject(project3);
 		setupProject(project4);
+	}
+
+	protected void tearDown() throws Exception {
+		super.tearDown();
+
+		// Cleanup
+		project0.delete(true, null);
+		project1.delete(true, null);
+		project2.delete(true, null);
+		project3.delete(true, null);
+		project4.delete(true, null);
 	}
 
 	/**

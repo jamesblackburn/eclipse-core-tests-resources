@@ -40,8 +40,8 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 		super.setUp();
 		// Create resources
 		IWorkspaceRoot root = getWorkspace().getRoot();
-		project0 = root.getProject("Project0");
-		project1 = root.getProject("Project1");
+		project0 = root.getProject("BuildVariantTest_p0");
+		project1 = root.getProject("BuildVariantTest_p1");
 		file0 = project0.getFile("File0");
 		file1 = project1.getFile("File1");
 		IResource[] resources = {project0, project1, file0, file1};
@@ -49,6 +49,14 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 		setAutoBuilding(false);
 		setupProject(project0);
 		setupProject(project1);
+	}
+
+	protected void tearDown() throws Exception {
+		super.tearDown();
+
+		// Delete resources
+		project0.delete(true, null);
+		project1.delete(true, null);
 	}
 
 	/**

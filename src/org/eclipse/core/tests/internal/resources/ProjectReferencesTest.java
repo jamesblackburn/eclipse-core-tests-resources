@@ -55,10 +55,10 @@ public class ProjectReferencesTest extends ResourceTest {
 	}
 
 	public void setUp() throws Exception {
-		project0 = getWorkspace().getRoot().getProject("Project0");
-		project1 = getWorkspace().getRoot().getProject("Project1");
-		project2 = getWorkspace().getRoot().getProject("Project2");
-		project3 = getWorkspace().getRoot().getProject("Project3");
+		project0 = getWorkspace().getRoot().getProject("ProjectReferencesTest_p0");
+		project1 = getWorkspace().getRoot().getProject("ProjectReferencesTest_p1");
+		project2 = getWorkspace().getRoot().getProject("ProjectReferencesTest_p2");
+		project3 = getWorkspace().getRoot().getProject("ProjectReferencesTest_p3");
 		ensureExistsInWorkspace(new IProject[] {project0, project1, project2, project3}, true);
 		setUpVariants(project0);
 		setUpVariants(project1);
@@ -80,6 +80,16 @@ public class ProjectReferencesTest extends ResourceTest {
 		project2v1r = new ProjectVariantReference(project2v1);
 		project3v0r = new ProjectVariantReference(project3v0);
 		project3v1r = new ProjectVariantReference(project3v1);
+	}
+
+	protected void tearDown() throws Exception {
+		super.tearDown();
+
+		// clean-up resources
+		project0.delete(true, null);
+		project1.delete(true, null);
+		project2.delete(true, null);
+		project3.delete(true, null);
 	}
 
 	private void setUpVariants(IProject project) throws CoreException {

@@ -44,6 +44,11 @@ public class ProjectVariantsTest extends ResourceTest {
 		defaultVariant = new ProjectVariant(project, IProjectVariant.DEFAULT_VARIANT);
 	}
 
+	protected void tearDown() throws Exception {
+		super.tearDown();
+		project.delete(true, null);
+	}
+
 	public void testBasics() throws CoreException {
 		IProjectDescription desc = project.getDescription();
 		desc.setVariants(new IProjectVariant[] {desc.newVariant(variantId0), desc.newVariant(variantId1)});
