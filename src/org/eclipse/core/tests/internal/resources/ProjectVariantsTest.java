@@ -41,7 +41,7 @@ public class ProjectVariantsTest extends ResourceTest {
 		variant0 = new ProjectVariant(project, variantId0);
 		variant1 = new ProjectVariant(project, variantId1);
 		variant2 = new ProjectVariant(project, variantId2);
-		defaultVariant = new ProjectVariant(project, IProjectDescription.DEFAULT_VARIANT);
+		defaultVariant = new ProjectVariant(project, IProjectVariant.DEFAULT_VARIANT);
 	}
 
 	public void testBasics() throws CoreException {
@@ -89,7 +89,7 @@ public class ProjectVariantsTest extends ResourceTest {
 
 		assertEquals("2.0", defaultVariant, project.getActiveVariant());
 		desc = project.getDescription();
-		desc.setActiveVariant(IProjectDescription.DEFAULT_VARIANT);
+		desc.setActiveVariant(IProjectVariant.DEFAULT_VARIANT);
 		project.setDescription(desc, getMonitor());
 		assertEquals("2.1", defaultVariant, project.getActiveVariant());
 	}
