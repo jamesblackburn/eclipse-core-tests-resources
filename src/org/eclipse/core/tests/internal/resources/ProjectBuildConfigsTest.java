@@ -39,11 +39,14 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 	private IBuildConfiguration defaultVariant;
 
 	public void setUp() throws Exception {
-		project = getWorkspace().getRoot().getProject("Project");
+		project = getWorkspace().getRoot().getProject("ProjectBuildConfigsTest_Project");
 		ensureExistsInWorkspace(new IProject[] {project}, true);
 		variant0 = new BuildConfiguration(project, variantId0);
+		variant0.setName(null);
 		variant1 = new BuildConfiguration(project, variantId1);
+		variant1.setName("name1");
 		variant2 = new BuildConfiguration(project, variantId2);
+		variant2.setName("name2");
 		defaultVariant = new BuildConfiguration(project, IBuildConfiguration.DEFAULT_CONFIG_ID);
 	}
 
@@ -54,13 +57,19 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 	public void testBasics() throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setBuildConfigurations(new IBuildConfiguration[] {desc.newBuildConfiguration(variantId0), desc.newBuildConfiguration(variantId1)});
+		IBuildConfiguration[] configs = new IBuildConfiguration[] {desc.newBuildConfiguration(variantId0), desc.newBuildConfiguration(variantId1)};
+		configs[0].setName(null);
+		configs[1].setName("name1");
+		desc.setBuildConfigurations(configs);
 		project.setDescription(desc, getMonitor());
 
 		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigurations());
 		assertEquals("1.1", variant0, project.getBuildConfiguration(variantId0));
 		assertEquals("1.2", variant1, project.getBuildConfiguration(variantId1));
+		assertEquals("1.3", variant0.getName(), project.getBuildConfiguration(variantId0).getName());
+		assertEquals("1.4", variant1.getName(), project.getBuildConfiguration(variantId1).getName());
 
+		// Build configuration names don't contribute to equality
 		assertTrue("2.0", project.hasBuildConfiguration(variant0));
 		assertTrue("2.1", project.hasBuildConfiguration(variant1));
 		assertFalse("2.2", project.hasBuildConfiguration(variant2));
