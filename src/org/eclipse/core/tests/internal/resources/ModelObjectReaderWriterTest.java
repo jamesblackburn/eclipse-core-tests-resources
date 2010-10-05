@@ -761,6 +761,94 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		assertEquals("5.0", 0, commands2[0].getArguments().size());
 	}
 
+	public void testProjectDescriptionVariants() throws Throwable {
+		IFileStore tempStore = getTempStore();
+		URI location = tempStore.toURI();
+		/* test write */
+		ProjectDescription description = new ProjectDescription();
+		description.setLocationURI(location);
+		description.setName("MyProjectDescription");
+		IBuildConfiguration[] variants = new IBuildConfiguration[] {description.newBuildConfiguration("Variant0"), description.newBuildConfiguration("Variant1"), description.newBuildConfiguration("Variant2")};
+		description.setBuildConfigurations(variants);
+
+		writeDescription(tempStore, description);
+
+		/* test read */
+		ProjectDescription description2 = readDescription(tempStore);
+		assertTrue("1.0", description.getName().equals(description2.getName()));
+		assertEquals("2.0", location, description.getLocationURI());
+
+		IBuildConfiguration[] variants2 = description2.internalGetBuildConfigs(false);
+		assertEquals("3.0", 3, variants2.length);
+		assertEquals("3.1", variants2[0], variants[0]);
+		assertEquals("3.2", variants2[1], variants[1]);
+		assertEquals("3.3", variants2[2], variants[2]);
+	}
+
+	public void testProjectDescriptionActiveVariant() throws Throwable {
+		IFileStore tempStore = getTempStore();
+		URI location = tempStore.toURI();
+		/* test write */
+		ProjectDescription description = new ProjectDescription();
+		description.setLocationURI(location);
+		description.setName("MyProjectDescription");
+		IBuildConfiguration[] variants = new IBuildConfiguration[] {description.newBuildConfiguration("Variant0"), description.newBuildConfiguration("Variant1"), description.newBuildConfiguration("Variant2")};
+		description.setBuildConfigurations(variants);
+
+		writeDescription(tempStore, description);
+
+		/* test read */
+		ProjectDescription description2 = readDescription(tempStore);
+		assertTrue("1.0", description.getName().equals(description2.getName()));
+		assertEquals("2.0", location, description.getLocationURI());
+	}
+
+	public void testProjectDescriptionVariantReferences() throws Throwable {
+		IFileStore tempStore = getTempStore();
+		URI location = tempStore.toURI();
+		/* test write */
+		IProject project0 = getWorkspace().getRoot().getProject("Project0");
+		IProject project1 = getWorkspace().getRoot().getProject("Project1");
+		ProjectDescription description = new ProjectDescription();
+		description.setLocationURI(location);
+		description.setName("MyProjectDescription");
+		IBuildConfiguration[] variants = new IBuildConfiguration[] {description.newBuildConfiguration("Variant0"), description.newBuildConfiguration("Variant1"), description.newBuildConfiguration("Variant2")};
+		description.setBuildConfigurations(variants);
+		for (int i = 0; i < 3; i++) {
+			IBuildConfigReference[] refs = new IBuildConfigReference[2];
+			refs[0] = project0.newReference();
+			refs[0].setConfigurationId("Variant0");
+			refs[1] = project1.newReference();
+			refs[1].setConfigurationId("Variant1");
+			description.setReferencedProjectConfigs(variants[i].getConfigurationId(), refs);
+		}
+
+		writeDescription(tempStore, description);
+
+		/* test read */
+		ProjectDescription description2 = readDescription(tempStore);
+		assertTrue("1.0", description.getName().equals(description2.getName()));
+		assertEquals("2.0", location, description.getLocationURI());
+
+		IBuildConfiguration[] variants2 = description2.internalGetBuildConfigs(false);
+		assertEquals("3.0", 3, variants2.length);
+		assertEquals("3.1", variants2[0], variants[0]);
+		assertEquals("3.2", variants2[1], variants[1]);
+		assertEquals("3.3", variants2[2], variants[2]);
+
+		for (int i = 0; i < 3; i++) {
+			IBuildConfigReference[] refs = description2.getReferencedProjectConfigs(variants[i].getConfigurationId());
+			IBuildConfigReference[] refs2 = new IBuildConfigReference[2];
+			refs2[0] = project0.newReference();
+			refs2[0].setConfigurationId("Variant0");
+			refs2[1] = project1.newReference();
+			refs2[1].setConfigurationId("Variant1");
+			assertEquals((i + 4) + ".0", 2, refs.length);
+			assertEquals((i + 4) + ".1", refs2[0], refs[0]);
+			assertEquals((i + 4) + ".2", refs2[1], refs[1]);
+		}
+	}
+
 	public void testProjectDescriptionWithSpaces() throws Throwable {
 
 		IFileStore store = getTempStore();

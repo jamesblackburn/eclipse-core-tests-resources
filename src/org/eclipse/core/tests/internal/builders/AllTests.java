@@ -7,6 +7,7 @@
  * 
  *  Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Broadcom Corp.
  *******************************************************************************/
 package org.eclipse.core.tests.internal.builders;
 
@@ -32,6 +33,8 @@ public class AllTests extends TestCase {
 		suite.addTest(EmptyDeltaTest.suite());
 		suite.addTest(MultiProjectBuildTest.suite());
 		suite.addTest(RelaxedSchedRuleBuilderTest.suite());
+		suite.addTest(BuildConfigurationsTest.suite());
+		suite.addTest(BuildContextTest.suite());
 		return suite;
 	}
 }
