@@ -10,14 +10,10 @@
  *******************************************************************************/
 package org.eclipse.core.tests.internal.resources;
 
-import org.eclipse.core.resources.IBuildConfiguration;
-import org.eclipse.core.resources.IBuildConfigReference;
-
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.internal.resources.BuildConfigReference;
+import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.tests.resources.ResourceTest;
@@ -44,12 +40,12 @@ public class ProjectReferencesTest extends ResourceTest {
 	private IBuildConfiguration project3v1;
 	private IBuildConfigReference project0v0r;
 	private IBuildConfigReference project0v1r;
+	private IBuildConfigReference project1ActiveR;
 	private IBuildConfigReference project1v0r;
 	private IBuildConfigReference project1v1r;
+	private IBuildConfigReference project2ActiveR;
 	private IBuildConfigReference project2v0r;
-	private IBuildConfigReference project2v1r;
-	private IBuildConfigReference project3v0r;
-	private IBuildConfigReference project3v1r;
+	private IBuildConfigReference project3ActiveR;
 	private String variant0 = "Variant0";
 	private String variant1 = "Variant1";
 	private String nonExistantVariant = "foo";
@@ -78,12 +74,12 @@ public class ProjectReferencesTest extends ResourceTest {
 		project3v1 = new BuildConfiguration(project3, variant1);
 		project0v0r = new BuildConfigReference(project0v0);
 		project0v1r = new BuildConfigReference(project0v1);
+		project1ActiveR = new BuildConfigReference(project1);
 		project1v0r = new BuildConfigReference(project1v0);
 		project1v1r = new BuildConfigReference(project1v1);
+		project2ActiveR = new BuildConfigReference(project2);
 		project2v0r = new BuildConfigReference(project2v0);
-		project2v1r = new BuildConfigReference(project2v1);
-		project3v0r = new BuildConfigReference(project3v0);
-		project3v1r = new BuildConfigReference(project3v1);
+		project3ActiveR = new BuildConfigReference(project3);
 	}
 
 	protected void tearDown() throws Exception {
@@ -128,12 +124,12 @@ public class ProjectReferencesTest extends ResourceTest {
 		desc = project0.getDescription();
 		assertEquals("1.0", new IProject[] {project3, project1}, desc.getReferencedProjects());
 		assertEquals("1.1", new IProject[] {project1, project2}, desc.getDynamicReferences());
-		assertEquals("1.2", new IBuildConfigReference[] {project3v0r, project3v1r, project1v0r, project1v1r}, desc.getReferencedProjectConfigs(variant0));
-		assertEquals("1.3", new IBuildConfigReference[] {project1v0r, project1v1r, project2v0r, project2v1r}, desc.getDynamicConfigReferences(variant0));
+		assertEquals("1.2", new IBuildConfigReference[] {project3ActiveR, project1ActiveR}, desc.getReferencedProjectConfigs(variant0));
+		assertEquals("1.3", new IBuildConfigReference[] {project1ActiveR, project2ActiveR}, desc.getDynamicConfigReferences(variant0));
 
 		assertEquals("2.0", new IProject[] {project3, project1, project2}, project0.getReferencedProjects());
 		assertEquals("2.1", new IProject[] {project1, project3}, project0.getReferencingProjects());
-		assertEquals("2.2", new IBuildConfiguration[] {project3v0, project3v1, project1v0, project1v1, project2v0, project2v1}, project0.getReferencedBuildConfigurations(project0v0));
+		assertEquals("2.2", new IBuildConfiguration[] {project3v0, project1v0, project2v0}, project0.getReferencedBuildConfigurations(project0v0));
 		assertEquals("2.3", new IBuildConfiguration[] {project1v0, project1v1, project3v0, project3v1}, project0.getReferencingBuildConfigurations(project0v0));
 	}
 

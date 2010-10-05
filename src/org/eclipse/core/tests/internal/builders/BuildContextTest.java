@@ -10,10 +10,6 @@
  *******************************************************************************/
 package org.eclipse.core.tests.internal.builders;
 
-import org.eclipse.core.resources.IBuildConfiguration;
-import org.eclipse.core.resources.IBuildConfigReference;
-
-
 import java.util.Arrays;
 import java.util.Comparator;
 import junit.framework.Test;
@@ -201,14 +197,14 @@ public class BuildContextTest extends AbstractBuilderTest {
 		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration(), project2.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
-		assertArraysContainSameElements("2.0", new IProject[] {project1}, context.getAllReferencedProjects());
+		assertArraysContainSameElements("2.0", new IProject[] {project2, project1}, context.getAllReferencedProjects());
 		assertArraysContainSameElements("2.1", new IProject[] {}, context.getAllReferencingProjects());
 		context = ContextBuilder.getBuilder(project1.getActiveBuildConfiguration()).contextForLastBuild;
-		assertArraysContainSameElements("3.0", new IProject[] {}, context.getAllReferencedProjects());
+		assertArraysContainSameElements("3.0", new IProject[] {project2}, context.getAllReferencedProjects());
 		assertArraysContainSameElements("3.1", new IProject[] {project0}, context.getAllReferencingProjects());
 		context = ContextBuilder.getBuilder(project2.getActiveBuildConfiguration()).contextForLastBuild;
 		assertEquals("4.0", 0, context.getAllReferencedProjects().length);
-		assertEquals("4.1", 0, context.getAllReferencingProjects().length);
+		assertEquals("4.1", 2, context.getAllReferencingProjects().length);
 	}
 
 	public void testReferenceActiveVariant() throws CoreException {
