@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  * Broadcom Corporation - initial API and implementation
  *******************************************************************************/
@@ -92,78 +92,39 @@ public class BuildContextTest extends AbstractBuilderTest {
 
 	/**
 	 * Setup a reference graph, then test the build context for for each project involved
-	 * in the 'build'. The reference graph contains the following structures:
-	 *  - Multiple directly referenced buildConfigs
-	 *  - Multiple directly referencing buildConfigs
-	 *  - Cycles and loops - between both 2 buildConfigs and 3 buildConfigs
-	 *  - Variants that is not part of the build but are part of the reference graph
+	 * in the 'build'.
 	 */
-	public void testBuildContextForComplexGraph() throws CoreException {
+	public void testBuildContext() throws CoreException {
 		// Create reference graph
 		IBuildConfiguration p0v0 = project0.getBuildConfiguration(variant0);
 		IBuildConfiguration p0v1 = project0.getBuildConfiguration(variant1);
 		IBuildConfiguration p1v0 = project1.getBuildConfiguration(variant0);
-		IBuildConfiguration p1v1 = project1.getBuildConfiguration(variant1);
-		IBuildConfiguration p2v0 = project2.getBuildConfiguration(variant0);
-		IBuildConfiguration p2v1 = project2.getBuildConfiguration(variant1);
-		IBuildConfiguration p3v0 = project3.getBuildConfiguration(variant0);
-		IBuildConfiguration p3v1 = project3.getBuildConfiguration(variant1);
-		IBuildConfiguration p4v0 = project4.getBuildConfiguration(variant0);
-		IBuildConfiguration p4v1 = project4.getBuildConfiguration(variant1);
-		setReferences(p0v0, new IBuildConfiguration[] {p0v1, p1v1, p4v0});
-		setReferences(p0v1, new IBuildConfiguration[] {p1v0, p2v0});
-		setReferences(p1v0, new IBuildConfiguration[] {p2v1});
-		setReferences(p1v1, new IBuildConfiguration[] {p2v1, p4v1});
-		setReferences(p2v0, new IBuildConfiguration[] {p3v0});
-		setReferences(p2v1, new IBuildConfiguration[] {});
-		setReferences(p3v0, new IBuildConfiguration[] {p0v1, p2v0, p2v1});
-		setReferences(p3v1, new IBuildConfiguration[] {p0v0, p3v0});
-		setReferences(p4v0, new IBuildConfiguration[] {p0v0, p4v1});
-		setReferences(p4v1, new IBuildConfiguration[] {p1v1});
 
 		// Create build order
-		final IBuildConfiguration[] buildOrder = new IBuildConfiguration[] {p2v1, p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1, p4v0};
+		final IBuildConfiguration[] buildOrder = new IBuildConfiguration[] {p0v0, p0v1, p1v0};
 
 		IBuildContext context;
 
-		context = new BuildContext(p2v1, buildOrder);
+		context = new BuildContext(p0v0, buildOrder);
 		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {}, context.getAllReferencedBuildConfigurations());
-		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1, p4v0}, context.getAllReferencingBuildConfigurations());
-
-		context = new BuildContext(p1v0, buildOrder);
-		assertArraysContainSameElements("2.0", new IBuildConfiguration[] {p2v1}, context.getAllReferencedBuildConfigurations());
-		assertArraysContainSameElements("2.1", new IBuildConfiguration[] {p0v0, p0v1, p2v0, p3v0, p4v0}, context.getAllReferencingBuildConfigurations());
-
-		context = new BuildContext(p1v1, buildOrder);
-		assertArraysContainSameElements("3.0", new IBuildConfiguration[] {p2v1}, context.getAllReferencedBuildConfigurations());
-		assertArraysContainSameElements("3.1", new IBuildConfiguration[] {p0v0, p4v0, p4v1}, context.getAllReferencingBuildConfigurations());
-
-		context = new BuildContext(p3v0, buildOrder);
-		assertArraysContainSameElements("4.0", new IBuildConfiguration[] {p2v1}, context.getAllReferencedBuildConfigurations());
-		assertArraysContainSameElements("4.1", new IBuildConfiguration[] {p0v0, p0v1, p2v0, p4v0}, context.getAllReferencingBuildConfigurations());
-
-		context = new BuildContext(p2v0, buildOrder);
-		assertArraysContainSameElements("5.0", new IBuildConfiguration[] {p2v1, p3v0}, context.getAllReferencedBuildConfigurations());
-		assertArraysContainSameElements("5.1", new IBuildConfiguration[] {p0v0, p0v1, p4v0}, context.getAllReferencingBuildConfigurations());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p0v1, p1v0}, context.getAllReferencingBuildConfigurations());
 
 		context = new BuildContext(p0v1, buildOrder);
-		assertArraysContainSameElements("6.0", new IBuildConfiguration[] {p2v1, p1v0, p3v0, p2v0}, context.getAllReferencedBuildConfigurations());
-		assertArraysContainSameElements("6.1", new IBuildConfiguration[] {p0v0, p4v0}, context.getAllReferencingBuildConfigurations());
+		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {p0v0}, context.getAllReferencedBuildConfigurations());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p1v0}, context.getAllReferencingBuildConfigurations());
 
-		context = new BuildContext(p0v0, buildOrder);
-		assertArraysContainSameElements("7.0", new IBuildConfiguration[] {p0v1, p1v0, p1v1, p2v0, p2v1, p3v0}, context.getAllReferencedBuildConfigurations());
-		assertArraysContainSameElements("7.1", new IBuildConfiguration[] {p4v0}, context.getAllReferencingBuildConfigurations());
+		context = new BuildContext(p1v0, buildOrder);
+		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {p0v0, p0v1}, context.getAllReferencedBuildConfigurations());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {}, context.getAllReferencingBuildConfigurations());
 
-		context = new BuildContext(p4v1, buildOrder);
-		assertArraysContainSameElements("8.0", new IBuildConfiguration[] {p1v1, p2v1}, context.getAllReferencedBuildConfigurations());
-		assertArraysContainSameElements("8.1", new IBuildConfiguration[] {p4v0}, context.getAllReferencingBuildConfigurations());
+		// And it works with no build context too
+		context = new BuildContext(p1v0);
+		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {}, context.getAllReferencedBuildConfigurations());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {}, context.getAllReferencingBuildConfigurations());
 
-		context = new BuildContext(p4v0, buildOrder);
-		assertArraysContainSameElements("9.0", new IBuildConfiguration[] {p2v1, p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1}, context.getAllReferencedBuildConfigurations());
-		assertArraysContainSameElements("9.1", new IBuildConfiguration[] {}, context.getAllReferencingBuildConfigurations());
 	}
 
-	public void testProjectBuild() throws CoreException {
+	public void testSingleProjectBuild() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
 		project0.build(IncrementalProjectBuilder.FULL_BUILD, getMonitor());
@@ -257,6 +218,10 @@ public class BuildContextTest extends AbstractBuilderTest {
 		assertArraysContainSameElements("3.3", new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, context.getAllReferencingBuildConfigurations());
 	}
 
+	/**
+	 * p0 --> p1 --> p2
+	 * @throws CoreException
+	 */
 	private void setupSimpleReferences() throws CoreException {
 		setReferences(project0.getActiveBuildConfiguration(), new IBuildConfiguration[] {project1.getActiveBuildConfiguration()});
 		setReferences(project1.getActiveBuildConfiguration(), new IBuildConfiguration[] {project2.getActiveBuildConfiguration()});
