@@ -81,11 +81,6 @@
       <run class="org.eclipse.core.tests.internal.builders.ConfigurationBuilder"/>
     </builder>
   </extension>
-  <extension point="org.eclipse.core.resources.builders" id="contextbuilder" name="Context Builder">
-    <builder callOnEmptyDelta="true">
-      <run class="org.eclipse.core.tests.internal.builders.ContextBuilder"/>
-    </builder>
-  </extension>
   
 <extension
       id="simpleNature"
