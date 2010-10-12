@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.core.tests.internal.builders;
 
+import org.eclipse.core.resources.IBuildConfiguration;
+
 import java.util.*;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
@@ -22,7 +24,7 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 public class ContextBuilder extends TestBuilder {
 	public static final String BUILDER_NAME = "org.eclipse.core.tests.resources.contextbuilder";
 
-	/** Stores IProjectVariant -> ContextBuilder */
+	/** Stores IBuildConfiguration -> ContextBuilder */
 	private static HashMap builders = new HashMap();
 	/** The context information for the last run of this builder */
 	IBuildContext contextForLastBuild = null;
@@ -32,17 +34,17 @@ public class ContextBuilder extends TestBuilder {
 	private boolean getRuleCalledForLastBuild = false;
 	private IBuildContext contextForLastBuildInGetRule = null;
 
-	private IProjectVariant projectVariantForLastBuild = null;
-	private IProjectVariant projectVariantForLastBuildInGetRule = null;
+	private IBuildConfiguration buildConfigurationForLastBuild = null;
+	private IBuildConfiguration buildConfigurationForLastBuildInGetRule = null;
 
 	public ContextBuilder() {
 	}
 
-	public static ContextBuilder getBuilder(IProjectVariant variant) {
+	public static ContextBuilder getBuilder(IBuildConfiguration variant) {
 		return (ContextBuilder) builders.get(variant);
 	}
 
-	public static IBuildContext getContext(IProjectVariant variant) {
+	public static IBuildContext getContext(IBuildConfiguration variant) {
 		return getBuilder(variant).contextForLastBuild;
 	}
 
@@ -51,7 +53,7 @@ public class ContextBuilder extends TestBuilder {
 			ContextBuilder builder = (ContextBuilder) it.next();
 			if (builder.getRuleCalledForLastBuild && !builder.contextForLastBuild.equals(builder.contextForLastBuildInGetRule))
 				return false;
-			if (builder.getRuleCalledForLastBuild && !builder.projectVariantForLastBuild.equals(builder.projectVariantForLastBuildInGetRule))
+			if (builder.getRuleCalledForLastBuild && !builder.buildConfigurationForLastBuild.equals(builder.buildConfigurationForLastBuildInGetRule))
 				return false;
 		}
 		return true;
@@ -62,21 +64,21 @@ public class ContextBuilder extends TestBuilder {
 			ContextBuilder builder = (ContextBuilder) it.next();
 			builder.contextForLastBuild = null;
 			builder.contextForLastBuildInGetRule = null;
-			builder.projectVariantForLastBuild = null;
-			builder.projectVariantForLastBuildInGetRule = null;
+			builder.buildConfigurationForLastBuild = null;
+			builder.buildConfigurationForLastBuildInGetRule = null;
 			builder.getRuleCalledForLastBuild = false;
 			builder.triggerForLastBuild = 0;
 		}
 	}
 
 	protected void startupOnInitialize() {
-		builders.put(getProjectVariant(), this);
+		builders.put(getBuildConfiguration(), this);
 	}
 
 	protected IProject[] build(int kind, Map args, IProgressMonitor monitor) throws CoreException {
 		contextForLastBuild = getContext();
 		triggerForLastBuild = kind;
-		projectVariantForLastBuild = getProjectVariant();
+		buildConfigurationForLastBuild = getBuildConfiguration();
 		return super.build(kind, args, monitor);
 	}
 
@@ -84,7 +86,7 @@ public class ContextBuilder extends TestBuilder {
 		super.clean(monitor);
 		contextForLastBuild = getContext();
 		triggerForLastBuild = IncrementalProjectBuilder.CLEAN_BUILD;
-		projectVariantForLastBuild = getProjectVariant();
+		buildConfigurationForLastBuild = getBuildConfiguration();
 	}
 
 	/*
@@ -94,7 +96,7 @@ public class ContextBuilder extends TestBuilder {
 	public ISchedulingRule getRule(int kind, Map args) {
 		getRuleCalledForLastBuild = true;
 		contextForLastBuildInGetRule = getContext();
-		projectVariantForLastBuildInGetRule = getProjectVariant();
+		buildConfigurationForLastBuildInGetRule = getBuildConfiguration();
 		return super.getRule(kind, args);
 	}
 }

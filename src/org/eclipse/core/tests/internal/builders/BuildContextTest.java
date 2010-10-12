@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  * Broadcom Corporation - initial API and implementation
  *******************************************************************************/
@@ -15,7 +15,7 @@ import java.util.Comparator;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.eclipse.core.internal.events.BuildContext;
-import org.eclipse.core.internal.resources.ProjectVariantReference;
+import org.eclipse.core.internal.resources.BuildConfigReference;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
@@ -44,11 +44,11 @@ public class BuildContextTest extends AbstractBuilderTest {
 		super.setUp();
 		// Create resources
 		IWorkspaceRoot root = getWorkspace().getRoot();
-		project0 = root.getProject("Project0");
-		project1 = root.getProject("Project1");
-		project2 = root.getProject("Project2");
-		project3 = root.getProject("Project3");
-		project4 = root.getProject("Project4");
+		project0 = root.getProject("BuildContextTests_p0");
+		project1 = root.getProject("BuildContextTests_p1");
+		project2 = root.getProject("BuildContextTests_p2");
+		project3 = root.getProject("BuildContextTests_p3");
+		project4 = root.getProject("BuildContextTests_p4");
 		IResource[] resources = {project0, project1, project2, project3, project4};
 		ensureExistsInWorkspace(resources, true);
 		setAutoBuilding(false);
@@ -59,8 +59,19 @@ public class BuildContextTest extends AbstractBuilderTest {
 		setupProject(project4);
 	}
 
+	protected void tearDown() throws Exception {
+		super.tearDown();
+
+		// Cleanup
+		project0.delete(true, null);
+		project1.delete(true, null);
+		project2.delete(true, null);
+		project3.delete(true, null);
+		project4.delete(true, null);
+	}
+
 	/**
-	 * Helper method to configure a project with a build command and several variants.
+	 * Helper method to configure a project with a build command and several buildConfigs.
 	 */
 	private void setupProject(IProject project) throws CoreException {
 		IProjectDescription desc = project.getDescription();
@@ -73,109 +84,70 @@ public class BuildContextTest extends AbstractBuilderTest {
 		command.setBuilding(IncrementalProjectBuilder.CLEAN_BUILD, true);
 		desc.setBuildSpec(new ICommand[] {command});
 
-		// Create variants
-		desc.setVariants(new IProjectVariant[] {desc.newVariant(variant0), desc.newVariant(variant1)});
+		// Create buildConfigs
+		desc.setBuildConfigurations(new IBuildConfiguration[] {desc.newBuildConfiguration(variant0), desc.newBuildConfiguration(variant1)});
 
 		project.setDescription(desc, getMonitor());
 	}
 
 	/**
 	 * Setup a reference graph, then test the build context for for each project involved
-	 * in the 'build'. The reference graph contains the following structures:
-	 *  - Multiple directly referenced variants
-	 *  - Multiple directly referencing variants
-	 *  - Cycles and loops - between both 2 variants and 3 variants
-	 *  - Variants that is not part of the build but are part of the reference graph
+	 * in the 'build'.
 	 */
-	public void testBuildContextForComplexGraph() throws CoreException {
+	public void testBuildContext() throws CoreException {
 		// Create reference graph
-		IProjectVariant p0v0 = project0.getVariant(variant0);
-		IProjectVariant p0v1 = project0.getVariant(variant1);
-		IProjectVariant p1v0 = project1.getVariant(variant0);
-		IProjectVariant p1v1 = project1.getVariant(variant1);
-		IProjectVariant p2v0 = project2.getVariant(variant0);
-		IProjectVariant p2v1 = project2.getVariant(variant1);
-		IProjectVariant p3v0 = project3.getVariant(variant0);
-		IProjectVariant p3v1 = project3.getVariant(variant1);
-		IProjectVariant p4v0 = project4.getVariant(variant0);
-		IProjectVariant p4v1 = project4.getVariant(variant1);
-		setReferences(p0v0, new IProjectVariant[] {p0v1, p1v1, p4v0});
-		setReferences(p0v1, new IProjectVariant[] {p1v0, p2v0});
-		setReferences(p1v0, new IProjectVariant[] {p2v1});
-		setReferences(p1v1, new IProjectVariant[] {p2v1, p4v1});
-		setReferences(p2v0, new IProjectVariant[] {p3v0});
-		setReferences(p2v1, new IProjectVariant[] {});
-		setReferences(p3v0, new IProjectVariant[] {p0v1, p2v0, p2v1});
-		setReferences(p3v1, new IProjectVariant[] {p0v0, p3v0});
-		setReferences(p4v0, new IProjectVariant[] {p0v0, p4v1});
-		setReferences(p4v1, new IProjectVariant[] {p1v1});
+		IBuildConfiguration p0v0 = project0.getBuildConfiguration(variant0);
+		IBuildConfiguration p0v1 = project0.getBuildConfiguration(variant1);
+		IBuildConfiguration p1v0 = project1.getBuildConfiguration(variant0);
 
 		// Create build order
-		final IProjectVariant[] buildOrder = new IProjectVariant[] {p2v1, p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1, p4v0};
+		final IBuildConfiguration[] buildOrder = new IBuildConfiguration[] {p0v0, p0v1, p1v0};
 
 		IBuildContext context;
 
-		context = new BuildContext(p2v1, buildOrder);
-		assertArraysContainSameElements("1.0", new IProjectVariant[] {}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements("1.1", new IProjectVariant[] {p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1, p4v0}, context.getAllReferencingProjectVariants());
-
-		context = new BuildContext(p1v0, buildOrder);
-		assertArraysContainSameElements("2.0", new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements("2.1", new IProjectVariant[] {p0v0, p0v1, p2v0, p3v0, p4v0}, context.getAllReferencingProjectVariants());
-
-		context = new BuildContext(p1v1, buildOrder);
-		assertArraysContainSameElements("3.0", new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements("3.1", new IProjectVariant[] {p0v0, p4v0, p4v1}, context.getAllReferencingProjectVariants());
-
-		context = new BuildContext(p3v0, buildOrder);
-		assertArraysContainSameElements("4.0", new IProjectVariant[] {p2v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements("4.1", new IProjectVariant[] {p0v0, p0v1, p2v0, p4v0}, context.getAllReferencingProjectVariants());
-
-		context = new BuildContext(p2v0, buildOrder);
-		assertArraysContainSameElements("5.0", new IProjectVariant[] {p2v1, p3v0}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements("5.1", new IProjectVariant[] {p0v0, p0v1, p4v0}, context.getAllReferencingProjectVariants());
+		context = new BuildContext(p0v0, buildOrder);
+		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {}, context.getAllReferencedBuildConfigurations());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p0v1, p1v0}, context.getAllReferencingBuildConfigurations());
 
 		context = new BuildContext(p0v1, buildOrder);
-		assertArraysContainSameElements("6.0", new IProjectVariant[] {p2v1, p1v0, p3v0, p2v0}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements("6.1", new IProjectVariant[] {p0v0, p4v0}, context.getAllReferencingProjectVariants());
+		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {p0v0}, context.getAllReferencedBuildConfigurations());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p1v0}, context.getAllReferencingBuildConfigurations());
 
-		context = new BuildContext(p0v0, buildOrder);
-		assertArraysContainSameElements("7.0", new IProjectVariant[] {p0v1, p1v0, p1v1, p2v0, p2v1, p3v0}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements("7.1", new IProjectVariant[] {p4v0}, context.getAllReferencingProjectVariants());
+		context = new BuildContext(p1v0, buildOrder);
+		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {p0v0, p0v1}, context.getAllReferencedBuildConfigurations());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {}, context.getAllReferencingBuildConfigurations());
 
-		context = new BuildContext(p4v1, buildOrder);
-		assertArraysContainSameElements("8.0", new IProjectVariant[] {p1v1, p2v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements("8.1", new IProjectVariant[] {p4v0}, context.getAllReferencingProjectVariants());
+		// And it works with no build context too
+		context = new BuildContext(p1v0);
+		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {}, context.getAllReferencedBuildConfigurations());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {}, context.getAllReferencingBuildConfigurations());
 
-		context = new BuildContext(p4v0, buildOrder);
-		assertArraysContainSameElements("9.0", new IProjectVariant[] {p2v1, p1v0, p1v1, p3v0, p2v0, p0v1, p0v0, p4v1}, context.getAllReferencedProjectVariants());
-		assertArraysContainSameElements("9.1", new IProjectVariant[] {}, context.getAllReferencingProjectVariants());
 	}
 
-	public void testProjectBuild() throws CoreException {
+	public void testSingleProjectBuild() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
 		project0.build(IncrementalProjectBuilder.FULL_BUILD, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
-		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
+		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
 		assertEquals("2.0", 0, context.getAllReferencedProjects().length);
 		assertEquals("2.1", 0, context.getAllReferencingProjects().length);
-		assertEquals("2.2", 0, context.getAllReferencedProjectVariants().length);
-		assertEquals("2.3", 0, context.getAllReferencingProjectVariants().length);
+		assertEquals("2.2", 0, context.getAllReferencedBuildConfigurations().length);
+		assertEquals("2.3", 0, context.getAllReferencingBuildConfigurations().length);
 	}
 
 	public void testWorkspaceBuildProject() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
-		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
-		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
+		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
 		assertArraysContainSameElements("2.0", new IProject[] {project1, project2}, context.getAllReferencedProjects());
 		assertEquals("2.1", 0, context.getAllReferencingProjects().length);
-		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
+		context = ContextBuilder.getBuilder(project1.getActiveBuildConfiguration()).contextForLastBuild;
 		assertArraysContainSameElements("3.0", new IProject[] {project2}, context.getAllReferencedProjects());
 		assertArraysContainSameElements("3.1", new IProject[] {project0}, context.getAllReferencingProjects());
-		context = ContextBuilder.getBuilder(project2.getActiveVariant()).contextForLastBuild;
+		context = ContextBuilder.getBuilder(project2.getActiveBuildConfiguration()).contextForLastBuild;
 		assertEquals("4.0", 0, context.getAllReferencedProjects().length);
 		assertArraysContainSameElements("4.1", new IProject[] {project0, project1}, context.getAllReferencingProjects());
 	}
@@ -183,36 +155,36 @@ public class BuildContextTest extends AbstractBuilderTest {
 	public void testWorkspaceBuildProjects() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
-		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant(), project2.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration(), project2.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
-		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
-		assertArraysContainSameElements("2.0", new IProject[] {project1}, context.getAllReferencedProjects());
+		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
+		assertArraysContainSameElements("2.0", new IProject[] {project2, project1}, context.getAllReferencedProjects());
 		assertArraysContainSameElements("2.1", new IProject[] {}, context.getAllReferencingProjects());
-		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
-		assertArraysContainSameElements("3.0", new IProject[] {}, context.getAllReferencedProjects());
+		context = ContextBuilder.getBuilder(project1.getActiveBuildConfiguration()).contextForLastBuild;
+		assertArraysContainSameElements("3.0", new IProject[] {project2}, context.getAllReferencedProjects());
 		assertArraysContainSameElements("3.1", new IProject[] {project0}, context.getAllReferencingProjects());
-		context = ContextBuilder.getBuilder(project2.getActiveVariant()).contextForLastBuild;
+		context = ContextBuilder.getBuilder(project2.getActiveBuildConfiguration()).contextForLastBuild;
 		assertEquals("4.0", 0, context.getAllReferencedProjects().length);
-		assertEquals("4.1", 0, context.getAllReferencingProjects().length);
+		assertEquals("4.1", 2, context.getAllReferencingProjects().length);
 	}
 
 	public void testReferenceActiveVariant() throws CoreException {
-		setReferences(project0.getActiveVariant(), new IProjectVariantReference[] {new ProjectVariantReference(project1)});
-		setReferences(project1.getActiveVariant(), new IProjectVariantReference[] {new ProjectVariantReference(project2)});
-		setReferences(project2.getActiveVariant(), new IProjectVariantReference[] {});
+		setReferences(project0.getActiveBuildConfiguration(), new IBuildConfigReference[] {new BuildConfigReference(project1)});
+		setReferences(project1.getActiveBuildConfiguration(), new IBuildConfigReference[] {new BuildConfigReference(project2)});
+		setReferences(project2.getActiveBuildConfiguration(), new IBuildConfigReference[] {});
 
 		ContextBuilder.clearStats();
 
-		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
 
-		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
+		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
 		assertArraysContainSameElements("2.0", new IProject[] {project1, project2}, context.getAllReferencedProjects());
 		assertEquals("2.1", 0, context.getAllReferencingProjects().length);
-		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
+		context = ContextBuilder.getBuilder(project1.getActiveBuildConfiguration()).contextForLastBuild;
 		assertArraysContainSameElements("3.0", new IProject[] {project2}, context.getAllReferencedProjects());
 		assertArraysContainSameElements("3.1", new IProject[] {project0}, context.getAllReferencingProjects());
-		context = ContextBuilder.getBuilder(project2.getActiveVariant()).contextForLastBuild;
+		context = ContextBuilder.getBuilder(project2.getActiveBuildConfiguration()).contextForLastBuild;
 		assertEquals("4.0", 0, context.getAllReferencedProjects().length);
 		assertArraysContainSameElements("4.1", new IProject[] {project0, project1}, context.getAllReferencingProjects());
 	}
@@ -222,63 +194,67 @@ public class BuildContextTest extends AbstractBuilderTest {
 	 * and the same variant directly. This should only result in one referenced variant being built.
 	 */
 	public void testReferenceVariantTwice() throws CoreException {
-		IProjectVariantReference ref1 = project1.newReference();
-		IProjectVariantReference ref2 = project1.newReference();
-		ref2.setVariantName(project1.getActiveVariant().getVariantName());
-		setReferences(project0.getActiveVariant(), new IProjectVariantReference[] {ref1, ref2});
-		setReferences(project1.getActiveVariant(), new IProjectVariantReference[] {});
+		IBuildConfigReference ref1 = project1.newReference();
+		IBuildConfigReference ref2 = project1.newReference();
+		ref2.setConfigurationId(project1.getActiveBuildConfiguration().getConfigurationId());
+		setReferences(project0.getActiveBuildConfiguration(), new IBuildConfigReference[] {ref1, ref2});
+		setReferences(project1.getActiveBuildConfiguration(), new IBuildConfigReference[] {});
 
 		ContextBuilder.clearStats();
 
-		getWorkspace().build(new IProjectVariant[] {project0.getActiveVariant()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
 
-		IBuildContext context = ContextBuilder.getContext(project0.getActiveVariant());
+		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
 		assertArraysContainSameElements("2.0", new IProject[] {project1}, context.getAllReferencedProjects());
 		assertEquals("2.1", 0, context.getAllReferencingProjects().length);
-		assertArraysContainSameElements("2.2", new IProjectVariant[] {project1.getActiveVariant()}, context.getAllReferencedProjectVariants());
-		assertEquals("2.3", 0, context.getAllReferencingProjectVariants().length);
+		assertArraysContainSameElements("2.2", new IBuildConfiguration[] {project1.getActiveBuildConfiguration()}, context.getAllReferencedBuildConfigurations());
+		assertEquals("2.3", 0, context.getAllReferencingBuildConfigurations().length);
 
-		context = ContextBuilder.getBuilder(project1.getActiveVariant()).contextForLastBuild;
+		context = ContextBuilder.getBuilder(project1.getActiveBuildConfiguration()).contextForLastBuild;
 		assertEquals("3.0", 0, context.getAllReferencedProjects().length);
 		assertArraysContainSameElements("3.1", new IProject[] {project0}, context.getAllReferencingProjects());
-		assertEquals("3.2", 0, context.getAllReferencedProjectVariants().length);
-		assertArraysContainSameElements("3.3", new IProjectVariant[] {project0.getActiveVariant()}, context.getAllReferencingProjectVariants());
+		assertEquals("3.2", 0, context.getAllReferencedBuildConfigurations().length);
+		assertArraysContainSameElements("3.3", new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, context.getAllReferencingBuildConfigurations());
 	}
 
+	/**
+	 * p0 --> p1 --> p2
+	 * @throws CoreException
+	 */
 	private void setupSimpleReferences() throws CoreException {
-		setReferences(project0.getActiveVariant(), new IProjectVariant[] {project1.getActiveVariant()});
-		setReferences(project1.getActiveVariant(), new IProjectVariant[] {project2.getActiveVariant()});
-		setReferences(project2.getActiveVariant(), new IProjectVariant[] {});
+		setReferences(project0.getActiveBuildConfiguration(), new IBuildConfiguration[] {project1.getActiveBuildConfiguration()});
+		setReferences(project1.getActiveBuildConfiguration(), new IBuildConfiguration[] {project2.getActiveBuildConfiguration()});
+		setReferences(project2.getActiveBuildConfiguration(), new IBuildConfiguration[] {});
 	}
 
 	/**
 	 * Helper method to set the references for a project.
 	 */
-	private void setReferences(IProjectVariant variant, IProjectVariantReference[] refs) throws CoreException {
+	private void setReferences(IBuildConfiguration variant, IBuildConfigReference[] refs) throws CoreException {
 		IProjectDescription desc = variant.getProject().getDescription();
-		desc.setReferencedProjectVariants(variant.getVariantName(), refs);
+		desc.setReferencedProjectConfigs(variant.getConfigurationId(), refs);
 		variant.getProject().setDescription(desc, getMonitor());
 	}
 
 	/**
 	 * Helper method to set the references for a project.
 	 */
-	private void setReferences(IProjectVariant variant, IProjectVariant[] variants) throws CoreException {
-		IProjectVariantReference[] refs = new IProjectVariantReference[variants.length];
+	private void setReferences(IBuildConfiguration variant, IBuildConfiguration[] variants) throws CoreException {
+		IBuildConfigReference[] refs = new IBuildConfigReference[variants.length];
 		for (int i = 0; i < variants.length; i++)
-			refs[i] = new ProjectVariantReference(variants[i]);
+			refs[i] = new BuildConfigReference(variants[i]);
 		setReferences(variant, refs);
 	}
 
-	private void assertArraysContainSameElements(String id, IProjectVariant[] expected, IProjectVariant[] actual) {
+	private void assertArraysContainSameElements(String id, IBuildConfiguration[] expected, IBuildConfiguration[] actual) {
 		assertArraysContainSameElements(id, expected, actual, new Comparator() {
 			public int compare(Object left, Object right) {
-				IProjectVariant leftV = (IProjectVariant) left;
-				IProjectVariant rightV = (IProjectVariant) right;
+				IBuildConfiguration leftV = (IBuildConfiguration) left;
+				IBuildConfiguration rightV = (IBuildConfiguration) right;
 				int ret = leftV.getProject().getName().compareTo(rightV.getProject().getName());
 				if (ret == 0)
-					ret = leftV.getVariantName().compareTo(rightV.getVariantName());
+					ret = leftV.getConfigurationId().compareTo(rightV.getConfigurationId());
 				return ret;
 			}
 		});

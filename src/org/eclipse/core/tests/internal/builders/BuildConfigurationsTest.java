@@ -11,17 +11,17 @@ package org.eclipse.core.tests.internal.builders;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.eclipse.core.internal.resources.ProjectVariantReference;
+import org.eclipse.core.internal.resources.BuildConfigReference;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
 /**
- * These tests exercise the project variants functionality which allows a different
- * builder to be run for different project variants.
+ * These tests exercise the project buildConfigs functionality which allows a different
+ * builder to be run for different project buildConfigs.
  */
-public class BuildVariantsTest extends AbstractBuilderTest {
+public class BuildConfigurationsTest extends AbstractBuilderTest {
 	public static Test suite() {
-		return new TestSuite(BuildVariantsTest.class);
+		return new TestSuite(BuildConfigurationsTest.class);
 	}
 
 	private IProject project0;
@@ -32,7 +32,7 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	private final String variant1 = "Variant1";
 	private final String variant2 = "Variant2";
 
-	public BuildVariantsTest(String name) {
+	public BuildConfigurationsTest(String name) {
 		super(name);
 	}
 
@@ -40,8 +40,8 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 		super.setUp();
 		// Create resources
 		IWorkspaceRoot root = getWorkspace().getRoot();
-		project0 = root.getProject("Project0");
-		project1 = root.getProject("Project1");
+		project0 = root.getProject("BuildVariantTest_p0");
+		project1 = root.getProject("BuildVariantTest_p1");
 		file0 = project0.getFile("File0");
 		file1 = project1.getFile("File1");
 		IResource[] resources = {project0, project1, file0, file1};
@@ -51,22 +51,30 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 		setupProject(project1);
 	}
 
+	protected void tearDown() throws Exception {
+		super.tearDown();
+
+		// Delete resources
+		project0.delete(true, null);
+		project1.delete(true, null);
+	}
+
 	/**
-	 * Helper method to configure a project with a build command and several variants.
+	 * Helper method to configure a project with a build command and several buildConfigs.
 	 */
 	private void setupProject(IProject project) throws CoreException {
 		IProjectDescription desc = project.getDescription();
 
 		// Add build command
-		ICommand command = createCommand(desc, VariantBuilder.BUILDER_NAME, "Build0");
+		ICommand command = createCommand(desc, ConfigurationBuilder.BUILDER_NAME, "Build0");
 		command.setBuilding(IncrementalProjectBuilder.AUTO_BUILD, true);
 		command.setBuilding(IncrementalProjectBuilder.FULL_BUILD, true);
 		command.setBuilding(IncrementalProjectBuilder.INCREMENTAL_BUILD, true);
 		command.setBuilding(IncrementalProjectBuilder.CLEAN_BUILD, true);
 		desc.setBuildSpec(new ICommand[] {command});
 
-		// Create variants
-		desc.setVariants(new IProjectVariant[] {desc.newVariant(variant0), desc.newVariant(variant1), desc.newVariant(variant2)});
+		// Create buildConfigs
+		desc.setBuildConfigurations(new IBuildConfiguration[] {desc.newBuildConfiguration(variant0), desc.newBuildConfiguration(variant1), desc.newBuildConfiguration(variant2)});
 
 		project.setDescription(desc, getMonitor());
 	}
@@ -76,7 +84,7 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 * and is given the correct deltas depending on which project variant is being built
 	 */
 	public void testDeltas() throws CoreException {
-		VariantBuilder.clearStats();
+		ConfigurationBuilder.clearStats();
 		// Run some incremental builds while varying the active variant and whether the project was modified
 		// and check that the builder is run/not run with the correct trigger
 		file0.setContents(getRandomContents(), true, true, getMonitor());
@@ -94,14 +102,14 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 * Tests that deltas are preserved per variant when a project is closed then opened.
 	 */
 	public void testCloseAndOpenProject() throws CoreException {
-		VariantBuilder.clearStats();
+		ConfigurationBuilder.clearStats();
 		file0.setContents(getRandomContents(), true, true, getMonitor());
 		incrementalBuild(1, project0, variant0, true, 1, IncrementalProjectBuilder.FULL_BUILD);
 		incrementalBuild(2, project0, variant1, true, 1, IncrementalProjectBuilder.FULL_BUILD);
 		incrementalBuild(3, project0, variant2, true, 1, IncrementalProjectBuilder.FULL_BUILD);
 
 		project0.close(getMonitor());
-		VariantBuilder.clearStats();
+		ConfigurationBuilder.clearStats();
 		project0.open(getMonitor());
 
 		incrementalBuild(4, project0, variant0, false, 0, 0);
@@ -116,30 +124,30 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 *     p0,v0 depends on p0,v1
 	 *     p0,v0 depends on p1,v0
 	 *     p0,v0 depends on p1,v2
-	 * Active variants are:
+	 * Active buildConfigs are:
 	 *     p0,v0 and p1,v0
 	 * Build order should be:
 	 *     p0,v1  p1,v0  p1,v2  p0,v0
 	 */
 	public void testBuildReferences() throws CoreException {
-		VariantBuilder.clearStats();
-		VariantBuilder.clearBuildOrder();
+		ConfigurationBuilder.clearStats();
+		ConfigurationBuilder.clearBuildOrder();
 		IProjectDescription desc = project0.getDescription();
-		desc.setActiveVariant(variant0);
+		project0.setActiveBuildConfiguration(variant0);
 		project0.setDescription(desc, getMonitor());
 		desc = project1.getDescription();
-		desc.setActiveVariant(variant0);
+		project1.setActiveBuildConfiguration(variant0);
 		project1.setDescription(desc, getMonitor());
 
 		// Note: references are not alphabetically ordered to check that references are sorted into a stable order
-		setReferences(project0, variant0, new IProjectVariant[] {project0.getVariant(variant1), project1.getVariant(variant2), project1.getVariant(variant0)});
+		setReferences(project0, variant0, new IBuildConfiguration[] {project0.getBuildConfiguration(variant1), project1.getBuildConfiguration(variant2), project1.getBuildConfiguration(variant0)});
 		getWorkspace().build(IncrementalProjectBuilder.INCREMENTAL_BUILD, getMonitor());
 
-		assertEquals("1.0", 4, VariantBuilder.buildOrder.size());
-		assertEquals("1.1", project0.getVariant(variant1), VariantBuilder.buildOrder.get(0));
-		assertEquals("1.2", project1.getVariant(variant0), VariantBuilder.buildOrder.get(1));
-		assertEquals("1.3", project1.getVariant(variant2), VariantBuilder.buildOrder.get(2));
-		assertEquals("1.4", project0.getVariant(variant0), VariantBuilder.buildOrder.get(3));
+		assertEquals("1.0", 4, ConfigurationBuilder.buildOrder.size());
+		assertEquals("1.1", project0.getBuildConfiguration(variant1), ConfigurationBuilder.buildOrder.get(0));
+		assertEquals("1.2", project1.getBuildConfiguration(variant0), ConfigurationBuilder.buildOrder.get(1));
+		assertEquals("1.3", project1.getBuildConfiguration(variant2), ConfigurationBuilder.buildOrder.get(2));
+		assertEquals("1.4", project0.getBuildConfiguration(variant0), ConfigurationBuilder.buildOrder.get(3));
 		checkBuild(2, project0, variant0, true, 1, IncrementalProjectBuilder.FULL_BUILD);
 		checkBuild(3, project0, variant1, true, 1, IncrementalProjectBuilder.FULL_BUILD);
 		checkBuild(4, project0, variant2, false, 0, 0);
@@ -150,12 +158,12 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 		// Modify project1, all project1 builders should do an incremental build
 		file1.setContents(getRandomContents(), true, true, getMonitor());
 
-		VariantBuilder.clearBuildOrder();
+		ConfigurationBuilder.clearBuildOrder();
 		getWorkspace().build(IncrementalProjectBuilder.INCREMENTAL_BUILD, getMonitor());
 
-		assertEquals("8.0", 2, VariantBuilder.buildOrder.size());
-		assertEquals("8.1", project1.getVariant(variant0), VariantBuilder.buildOrder.get(0));
-		assertEquals("8.2", project1.getVariant(variant2), VariantBuilder.buildOrder.get(1));
+		assertEquals("8.0", 2, ConfigurationBuilder.buildOrder.size());
+		assertEquals("8.1", project1.getBuildConfiguration(variant0), ConfigurationBuilder.buildOrder.get(0));
+		assertEquals("8.2", project1.getBuildConfiguration(variant2), ConfigurationBuilder.buildOrder.get(1));
 		checkBuild(9, project0, variant0, false, 1, 0);
 		checkBuild(10, project0, variant1, false, 1, 0);
 		checkBuild(11, project0, variant2, false, 0, 0);
@@ -165,10 +173,10 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	}
 
 	/**
-	 * Tests that cleaning a project variant does not affect other variants in the same project
+	 * Tests that cleaning a project variant does not affect other buildConfigs in the same project
 	 */
 	public void testClean() throws CoreException {
-		VariantBuilder.clearStats();
+		ConfigurationBuilder.clearStats();
 		incrementalBuild(1, project0, variant0, true, 1, IncrementalProjectBuilder.FULL_BUILD);
 		incrementalBuild(2, project0, variant1, true, 1, IncrementalProjectBuilder.FULL_BUILD);
 		clean(3, project0, variant0, 2);
@@ -178,12 +186,12 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	/**
 	 * Helper method to set the references for a project.
 	 */
-	private void setReferences(IProject project, String variant, IProjectVariant[] variants) throws CoreException {
+	private void setReferences(IProject project, String variant, IBuildConfiguration[] variants) throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		IProjectVariantReference[] refs = new IProjectVariantReference[variants.length];
+		IBuildConfigReference[] refs = new IBuildConfigReference[variants.length];
 		for (int i = 0; i < variants.length; i++)
-			refs[i] = new ProjectVariantReference(variants[i]);
-		desc.setReferencedProjectVariants(variant, refs);
+			refs[i] = new BuildConfigReference(variants[i]);
+		desc.setReferencedProjectConfigs(variant, refs);
 		project.setDescription(desc, getMonitor());
 	}
 
@@ -191,7 +199,7 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 * Run an incremental build for the given project variant, and check the behaviour of the build.
 	 */
 	private void incrementalBuild(int testId, IProject project, String variant, boolean shouldBuild, int expectedCount, int expectedTrigger) throws CoreException {
-		project.build(project.getVariant(variant), IncrementalProjectBuilder.INCREMENTAL_BUILD, getMonitor());
+		project.build(project.getBuildConfiguration(variant), IncrementalProjectBuilder.INCREMENTAL_BUILD, getMonitor());
 		checkBuild(testId, project, variant, shouldBuild, expectedCount, expectedTrigger);
 	}
 
@@ -200,10 +208,10 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 */
 	private void clean(int testId, IProject project, String variant, int expectedCount) throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setActiveVariant(variant);
+		project.setActiveBuildConfiguration(variant);
 		project.setDescription(desc, getMonitor());
 		project.build(IncrementalProjectBuilder.CLEAN_BUILD, getMonitor());
-		VariantBuilder builder = VariantBuilder.getBuilder(project.getVariant(variant));
+		ConfigurationBuilder builder = ConfigurationBuilder.getBuilder(project.getBuildConfiguration(variant));
 		assertNotNull(testId + ".0", builder);
 		assertEquals(testId + ".1", expectedCount, builder.buildCount);
 		assertEquals(testId + ".2", IncrementalProjectBuilder.CLEAN_BUILD, builder.triggerForLastBuild);
@@ -214,11 +222,11 @@ public class BuildVariantsTest extends AbstractBuilderTest {
 	 */
 	private void checkBuild(int testId, IProject project, String variant, boolean shouldBuild, int expectedCount, int expectedTrigger) throws CoreException {
 		try {
-			project.getVariant(variant);
+			project.getBuildConfiguration(variant);
 		} catch (CoreException e) {
 			fail(testId + ".0");
 		}
-		VariantBuilder builder = VariantBuilder.getBuilder(project.getVariant(variant));
+		ConfigurationBuilder builder = ConfigurationBuilder.getBuilder(project.getBuildConfiguration(variant));
 		if (builder == null) {
 			assertFalse(testId + ".1", shouldBuild);
 			assertEquals(testId + ".2", 0, expectedCount);

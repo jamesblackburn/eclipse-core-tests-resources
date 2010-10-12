@@ -1541,7 +1541,6 @@ public class IResourceTest extends ResourceTest {
 		create(file, true);
 		long modificationStamp = file.getModificationStamp();
 		assertTrue("1.1", modificationStamp != IResource.NULL_STAMP);
-		Thread.sleep(1);
 
 		// Remove and re-create the file in a workspace operation
 		getWorkspace().run(new IWorkspaceRunnable() {

@@ -17,12 +17,12 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
- * A builder used that stores statistics, such as which target was built, per project variant.
+ * A builder used that stores statistics, such as which target was built, per project build config.
  */
-public class VariantBuilder extends TestBuilder {
-	public static final String BUILDER_NAME = "org.eclipse.core.tests.resources.variantbuilder";
+public class ConfigurationBuilder extends TestBuilder {
+	public static final String BUILDER_NAME = "org.eclipse.core.tests.resources.configbuilder";
 
-	/** Stores IProjectVariant -> VariantBuilder */
+	/** Stores IBuildConfiguration -> ConfigurationBuilder */
 	private static HashMap builders = new HashMap();
 	/** Order in which builders have been run */
 	static List buildOrder = new ArrayList();
@@ -32,11 +32,11 @@ public class VariantBuilder extends TestBuilder {
 	IResourceDelta deltaForLastBuild;
 	int buildCount;
 
-	public VariantBuilder() {
+	public ConfigurationBuilder() {
 	}
 
-	public static VariantBuilder getBuilder(IProjectVariant variant) {
-		return (VariantBuilder) builders.get(variant);
+	public static ConfigurationBuilder getBuilder(IBuildConfiguration config) {
+		return (ConfigurationBuilder) builders.get(config);
 	}
 
 	public static void clearBuildOrder() {
@@ -45,7 +45,7 @@ public class VariantBuilder extends TestBuilder {
 
 	public static void clearStats() {
 		for (Iterator it = builders.values().iterator(); it.hasNext();) {
-			VariantBuilder builder = (VariantBuilder) it.next();
+			ConfigurationBuilder builder = (ConfigurationBuilder) it.next();
 			builder.buildCount = 0;
 			builder.triggerForLastBuild = 0;
 			builder.deltaForLastBuild = null;
@@ -53,7 +53,7 @@ public class VariantBuilder extends TestBuilder {
 	}
 
 	protected void startupOnInitialize() {
-		builders.put(getProjectVariant(), this);
+		builders.put(getBuildConfiguration(), this);
 		buildCount = 0;
 	}
 
@@ -61,7 +61,7 @@ public class VariantBuilder extends TestBuilder {
 		buildCount++;
 		triggerForLastBuild = kind;
 		deltaForLastBuild = getDelta(getProject());
-		buildOrder.add(getProjectVariant());
+		buildOrder.add(getBuildConfiguration());
 		return super.build(kind, args, monitor);
 	}
 
