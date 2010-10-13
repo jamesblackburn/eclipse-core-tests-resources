@@ -7,7 +7,7 @@
  * 
  *  Contributors:
  *     IBM Corporation - initial API and implementation
- *     Broadcom Corp.
+ *     Broadcom Corp. - build configurations
  *******************************************************************************/
 package org.eclipse.core.tests.internal.builders;
 
