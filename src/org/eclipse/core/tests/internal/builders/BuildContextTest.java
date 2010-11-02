@@ -105,15 +105,16 @@ public class BuildContextTest extends AbstractBuilderTest {
 
 		IBuildContext context;
 
-		context = new BuildContext(p0v0, buildOrder);
+		context = new BuildContext(p0v0, new IBuildConfiguration[] {p0v0, p0v1}, buildOrder);
 		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {}, context.getAllReferencedBuildConfigurations());
 		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p0v1, p1v0}, context.getAllReferencingBuildConfigurations());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p0v1, p1v0}, context.getRequestedConfigs());
 
-		context = new BuildContext(p0v1, buildOrder);
+		context = new BuildContext(p0v1, buildOrder, buildOrder);
 		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {p0v0}, context.getAllReferencedBuildConfigurations());
 		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p1v0}, context.getAllReferencingBuildConfigurations());
 
-		context = new BuildContext(p1v0, buildOrder);
+		context = new BuildContext(p1v0, buildOrder, buildOrder);
 		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {p0v0, p0v1}, context.getAllReferencedBuildConfigurations());
 		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {}, context.getAllReferencingBuildConfigurations());
 
@@ -139,7 +140,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 	public void testWorkspaceBuildProject() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
-		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, true, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
 		assertArraysContainSameElements("2.0", new IProject[] {project1, project2}, context.getAllReferencedProjects());
@@ -155,7 +156,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 	public void testWorkspaceBuildProjects() throws CoreException {
 		setupSimpleReferences();
 		ContextBuilder.clearStats();
-		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration(), project2.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration(), project2.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, true, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
 		assertArraysContainSameElements("2.0", new IProject[] {project2, project1}, context.getAllReferencedProjects());
@@ -175,7 +176,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 
 		ContextBuilder.clearStats();
 
-		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, true, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
 
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
@@ -202,7 +203,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 
 		ContextBuilder.clearStats();
 
-		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		getWorkspace().build(new IBuildConfiguration[] {project0.getActiveBuildConfiguration()}, IncrementalProjectBuilder.FULL_BUILD, true, getMonitor());
 		assertTrue("1.0", ContextBuilder.checkValid());
 
 		IBuildContext context = ContextBuilder.getContext(project0.getActiveBuildConfiguration());
