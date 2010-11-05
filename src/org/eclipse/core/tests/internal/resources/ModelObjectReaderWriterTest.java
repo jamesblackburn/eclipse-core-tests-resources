@@ -768,7 +768,7 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		ProjectDescription description = new ProjectDescription();
 		description.setLocationURI(location);
 		description.setName("MyProjectDescription");
-		IBuildConfiguration[] variants = new IBuildConfiguration[] {description.newBuildConfiguration("Variant0"), description.newBuildConfiguration("Variant1"), description.newBuildConfiguration("Variant2")};
+		IBuildConfiguration[] variants = new IBuildConfiguration[] {new BuildConfiguration("Variant0"), new BuildConfiguration("Variant1"), new BuildConfiguration("Variant2")};
 		description.setBuildConfigurations(variants);
 
 		writeDescription(tempStore, description);
@@ -792,7 +792,7 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		ProjectDescription description = new ProjectDescription();
 		description.setLocationURI(location);
 		description.setName("MyProjectDescription");
-		IBuildConfiguration[] variants = new IBuildConfiguration[] {description.newBuildConfiguration("Variant0"), description.newBuildConfiguration("Variant1"), description.newBuildConfiguration("Variant2")};
+		IBuildConfiguration[] variants = new IBuildConfiguration[] {new BuildConfiguration("Variant0"), new BuildConfiguration("Variant1"), new BuildConfiguration("Variant2")};
 		description.setBuildConfigurations(variants);
 
 		writeDescription(tempStore, description);
@@ -812,7 +812,7 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		ProjectDescription description = new ProjectDescription();
 		description.setLocationURI(location);
 		description.setName("MyProjectDescription");
-		IBuildConfiguration[] variants = new IBuildConfiguration[] {description.newBuildConfiguration("Variant0"), description.newBuildConfiguration("Variant1"), description.newBuildConfiguration("Variant2")};
+		IBuildConfiguration[] variants = new IBuildConfiguration[] {new BuildConfiguration("Variant0"), new BuildConfiguration("Variant1"), new BuildConfiguration("Variant2")};
 		description.setBuildConfigurations(variants);
 		for (int i = 0; i < 3; i++) {
 			IBuildConfigReference[] refs = new IBuildConfigReference[2];

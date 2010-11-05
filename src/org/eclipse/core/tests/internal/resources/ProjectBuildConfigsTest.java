@@ -57,7 +57,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 	public void testBasics() throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		IBuildConfiguration[] configs = new IBuildConfiguration[] {desc.newBuildConfiguration(variantId0), desc.newBuildConfiguration(variantId1)};
+		IBuildConfiguration[] configs = new IBuildConfiguration[] {project.newBuildConfiguration(variantId0), project.newBuildConfiguration(variantId1)};
 		configs[0].setName(null);
 		configs[1].setName("name1");
 		desc.setBuildConfigurations(configs);
@@ -90,7 +90,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 	public void testDuplicates() throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setBuildConfigurations(new IBuildConfiguration[] {desc.newBuildConfiguration(variantId0), desc.newBuildConfiguration(variantId1), desc.newBuildConfiguration(variantId0)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {project.newBuildConfiguration(variantId0), project.newBuildConfiguration(variantId1), project.newBuildConfiguration(variantId0)});
 		project.setDescription(desc, getMonitor());
 		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigurations());
 	}
@@ -125,5 +125,32 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		desc.setBuildConfigurations(new IBuildConfiguration[] {variant0, variant1});
 		project.setDescription(desc, getMonitor());
 		assertEquals("3.0", variant0, project.getActiveBuildConfiguration());
+	}
+
+	/**
+	 * Tests that build configuration references are correct after moving a project
+	 * @throws CoreException
+	 */
+	public void testProjectMove() throws CoreException {
+		IProjectDescription desc = project.getDescription();
+		IBuildConfiguration[] configs = new IBuildConfiguration[] {variant0, variant1};
+		desc.setBuildConfigurations(configs);
+		project.setDescription(desc, getMonitor());
+
+		// Move the project. The build configurations should point at the new project
+		String newProjectName = "projectMoved";
+		desc = project.getDescription();
+		desc.setName(newProjectName);
+		project.move(desc, false, getMonitor());
+
+		IProject newProject = getWorkspace().getRoot().getProject(newProjectName);
+		assertTrue("1.0", newProject.exists());
+
+		IBuildConfiguration[] newConfigs = newProject.getBuildConfigurations();
+		for (int i = 0; i < configs.length; i++) {
+			assertEquals("2." + i * 3, newProject, newConfigs[i].getProject());
+			assertEquals("2." + i * 3 + 1, configs[i].getConfigurationId(), newConfigs[i].getConfigurationId());
+			assertEquals("2." + i * 3 + 2, configs[i].getName(), newConfigs[i].getName());
+		}
 	}
 }

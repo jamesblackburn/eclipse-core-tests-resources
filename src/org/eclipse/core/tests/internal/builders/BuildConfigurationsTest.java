@@ -74,7 +74,7 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 		desc.setBuildSpec(new ICommand[] {command});
 
 		// Create buildConfigs
-		desc.setBuildConfigurations(new IBuildConfiguration[] {desc.newBuildConfiguration(variant0), desc.newBuildConfiguration(variant1), desc.newBuildConfiguration(variant2)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {project.newBuildConfiguration(variant0), project.newBuildConfiguration(variant1), project.newBuildConfiguration(variant2)});
 
 		project.setDescription(desc, getMonitor());
 	}
@@ -186,12 +186,12 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 	/**
 	 * Helper method to set the references for a project.
 	 */
-	private void setReferences(IProject project, String variant, IBuildConfiguration[] variants) throws CoreException {
+	private void setReferences(IProject project, String configId, IBuildConfiguration[] variants) throws CoreException {
 		IProjectDescription desc = project.getDescription();
 		IBuildConfigReference[] refs = new IBuildConfigReference[variants.length];
 		for (int i = 0; i < variants.length; i++)
 			refs[i] = new BuildConfigReference(variants[i]);
-		desc.setReferencedProjectConfigs(variant, refs);
+		desc.setDynamicConfigReferences(configId, refs);
 		project.setDescription(desc, getMonitor());
 	}
 

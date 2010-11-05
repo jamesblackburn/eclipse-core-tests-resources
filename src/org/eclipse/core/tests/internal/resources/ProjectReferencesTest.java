@@ -94,7 +94,7 @@ public class ProjectReferencesTest extends ResourceTest {
 
 	private void setUpVariants(IProject project) throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setBuildConfigurations(new IBuildConfiguration[] {desc.newBuildConfiguration(variant0), desc.newBuildConfiguration(variant1)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {project.newBuildConfiguration(variant0), project.newBuildConfiguration(variant1)});
 		project.setDescription(desc, getMonitor());
 	}
 
@@ -183,18 +183,18 @@ public class ProjectReferencesTest extends ResourceTest {
 	public void testAddReferencesToNonExistantVariant() throws CoreException {
 		IProjectDescription desc = project0.getDescription();
 
-		assertFalse("1.0", project0.hasBuildConfiguration(desc.newBuildConfiguration(nonExistantVariant)));
+		assertFalse("1.0", project0.hasBuildConfiguration(project0.newBuildConfiguration(nonExistantVariant)));
 
 		desc.setReferencedProjectConfigs(nonExistantVariant, new IBuildConfigReference[] {project1v0r});
 		desc.setDynamicConfigReferences(nonExistantVariant, new IBuildConfigReference[] {project1v0r});
 		project0.setDescription(desc, getMonitor());
 
-		assertFalse("2.0", project0.hasBuildConfiguration(desc.newBuildConfiguration(nonExistantVariant)));
+		assertFalse("2.0", project0.hasBuildConfiguration(project0.newBuildConfiguration(nonExistantVariant)));
 
 		assertEquals("3.0", new IBuildConfigReference[0], desc.getReferencedProjectConfigs(nonExistantVariant));
 		assertEquals("3.1", new IBuildConfigReference[0], desc.getDynamicConfigReferences(nonExistantVariant));
 		try {
-			project0.getReferencedBuildConfigurations(desc.newBuildConfiguration(nonExistantVariant));
+			project0.getReferencedBuildConfigurations(project0.newBuildConfiguration(nonExistantVariant));
 			fail("3.2");
 		} catch (CoreException e) {
 		}
