@@ -87,7 +87,7 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 		IProjectDescription desc = proj.getDescription();
 		desc.setDynamicConfigReferences(configs[0].getConfigurationId(), configRefs);
 		// Change the active configuration
-		proj.setActiveBuildConfiguration(configs[1].getConfigurationId());
+		desc.setActiveBuildConfiguration(configs[1].getConfigurationId());
 		proj.setDescription(desc, getMonitor());
 
 		ResourcesPlugin.getWorkspace().save(true, getMonitor());

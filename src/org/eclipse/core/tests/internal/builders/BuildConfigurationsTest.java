@@ -133,10 +133,10 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 		ConfigurationBuilder.clearStats();
 		ConfigurationBuilder.clearBuildOrder();
 		IProjectDescription desc = project0.getDescription();
-		project0.setActiveBuildConfiguration(variant0);
+		desc.setActiveBuildConfiguration(variant0);
 		project0.setDescription(desc, getMonitor());
 		desc = project1.getDescription();
-		project1.setActiveBuildConfiguration(variant0);
+		desc.setActiveBuildConfiguration(variant0);
 		project1.setDescription(desc, getMonitor());
 
 		// Note: references are not alphabetically ordered to check that references are sorted into a stable order
@@ -208,7 +208,7 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 	 */
 	private void clean(int testId, IProject project, String variant, int expectedCount) throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		project.setActiveBuildConfiguration(variant);
+		desc.setActiveBuildConfiguration(variant);
 		project.setDescription(desc, getMonitor());
 		project.build(IncrementalProjectBuilder.CLEAN_BUILD, getMonitor());
 		ConfigurationBuilder builder = ConfigurationBuilder.getBuilder(project.getBuildConfiguration(variant));

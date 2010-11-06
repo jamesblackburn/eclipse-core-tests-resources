@@ -76,11 +76,11 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 		assertEquals("3.0", variant0, project.getActiveBuildConfiguration());
 		desc = project.getDescription();
-		project.setActiveBuildConfiguration(variantId1);
+		desc.setActiveBuildConfiguration(variantId1);
 		project.setDescription(desc, getMonitor());
 		assertEquals("3.1", variant1, project.getActiveBuildConfiguration());
 		// test that setting the variant to an invalid id has no effect
-		project.setActiveBuildConfiguration(variantId2);
+		desc.setActiveBuildConfiguration(variantId2);
 		assertEquals("3.2", variant1, project.getActiveBuildConfiguration());
 
 		IBuildConfiguration variant = project.getBuildConfigurations()[0];
@@ -105,7 +105,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 		assertEquals("2.0", defaultVariant, project.getActiveBuildConfiguration());
 		desc = project.getDescription();
-		project.setActiveBuildConfiguration(IBuildConfiguration.DEFAULT_CONFIG_ID);
+		desc.setActiveBuildConfiguration(IBuildConfiguration.DEFAULT_CONFIG_ID);
 		project.setDescription(desc, getMonitor());
 		assertEquals("2.1", defaultVariant, project.getActiveBuildConfiguration());
 	}
@@ -120,7 +120,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		project.setDescription(desc, getMonitor());
 		assertEquals("2.0", variant0, project.getActiveBuildConfiguration());
 		desc = project.getDescription();
-		project.setActiveBuildConfiguration(variantId2);
+		desc.setActiveBuildConfiguration(variantId2);
 		project.setDescription(desc, getMonitor());
 		desc.setBuildConfigurations(new IBuildConfiguration[] {variant0, variant1});
 		project.setDescription(desc, getMonitor());
