@@ -816,10 +816,8 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		description.setBuildConfigurations(variants);
 		for (int i = 0; i < 3; i++) {
 			IBuildConfigReference[] refs = new IBuildConfigReference[2];
-			refs[0] = project0.newReference();
-			refs[0].setConfigurationId("Variant0");
-			refs[1] = project1.newReference();
-			refs[1].setConfigurationId("Variant1");
+			refs[0] = project0.newBuildConfigurationReference("Variant0");
+			refs[1] = project1.newBuildConfigurationReference("Variant1");
 			description.setReferencedProjectConfigs(variants[i].getConfigurationId(), refs);
 		}
 
@@ -839,10 +837,8 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		for (int i = 0; i < 3; i++) {
 			IBuildConfigReference[] refs = description2.getReferencedProjectConfigs(variants[i].getConfigurationId());
 			IBuildConfigReference[] refs2 = new IBuildConfigReference[2];
-			refs2[0] = project0.newReference();
-			refs2[0].setConfigurationId("Variant0");
-			refs2[1] = project1.newReference();
-			refs2[1].setConfigurationId("Variant1");
+			refs2[0] = project0.newBuildConfigurationReference("Variant0");
+			refs2[1] = project1.newBuildConfigurationReference("Variant1");
 			assertEquals((i + 4) + ".0", 2, refs.length);
 			assertEquals((i + 4) + ".1", refs2[0], refs[0]);
 			assertEquals((i + 4) + ".2", refs2[1], refs[1]);

@@ -202,7 +202,7 @@ public class ProjectReferencesTest extends ResourceTest {
 
 	public void testReferencesToActiveVariants() throws CoreException {
 		IProjectDescription desc = project0.getDescription();
-		desc.setReferencedProjectConfigs(variant0, new IBuildConfigReference[] {project1.newReference()});
+		desc.setReferencedProjectConfigs(variant0, new IBuildConfigReference[] {project1.newBuildConfigurationReference(null)});
 		project0.setDescription(desc, getMonitor());
 
 		assertEquals("1.0", new IBuildConfigReference[] {new BuildConfigReference(project1)}, desc.getReferencedProjectConfigs(variant0));
