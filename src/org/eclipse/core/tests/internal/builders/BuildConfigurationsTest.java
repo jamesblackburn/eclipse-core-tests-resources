@@ -207,10 +207,7 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 	 * Clean the specified project variant.
 	 */
 	private void clean(int testId, IProject project, String variant, int expectedCount) throws CoreException {
-		IProjectDescription desc = project.getDescription();
-		desc.setActiveBuildConfiguration(variant);
-		project.setDescription(desc, getMonitor());
-		project.build(IncrementalProjectBuilder.CLEAN_BUILD, getMonitor());
+		project.build(project.getBuildConfiguration(variant), IncrementalProjectBuilder.CLEAN_BUILD, getMonitor());
 		ConfigurationBuilder builder = ConfigurationBuilder.getBuilder(project.getBuildConfiguration(variant));
 		assertNotNull(testId + ".0", builder);
 		assertEquals(testId + ".1", expectedCount, builder.buildCount);
