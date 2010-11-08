@@ -11,7 +11,6 @@ package org.eclipse.core.tests.internal.builders;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.eclipse.core.internal.resources.BuildConfigReference;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
@@ -74,7 +73,7 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 		desc.setBuildSpec(new ICommand[] {command});
 
 		// Create buildConfigs
-		desc.setBuildConfigurations(new IBuildConfiguration[] {project.newBuildConfiguration(variant0), project.newBuildConfiguration(variant1), project.newBuildConfiguration(variant2)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variant0, null), getWorkspace().newBuildConfiguration(project.getName(), variant1, null), getWorkspace().newBuildConfiguration(project.getName(), variant2, null)});
 
 		project.setDescription(desc, getMonitor());
 	}
@@ -186,12 +185,9 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 	/**
 	 * Helper method to set the references for a project.
 	 */
-	private void setReferences(IProject project, String configId, IBuildConfiguration[] variants) throws CoreException {
+	private void setReferences(IProject project, String configId, IBuildConfiguration[] configs) throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		IBuildConfigReference[] refs = new IBuildConfigReference[variants.length];
-		for (int i = 0; i < variants.length; i++)
-			refs[i] = new BuildConfigReference(variants[i]);
-		desc.setDynamicConfigReferences(configId, refs);
+		desc.setDynamicConfigReferences(configId, configs);
 		project.setDescription(desc, getMonitor());
 	}
 

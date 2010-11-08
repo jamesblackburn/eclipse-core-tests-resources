@@ -41,12 +41,9 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 	public void setUp() throws Exception {
 		project = getWorkspace().getRoot().getProject("ProjectBuildConfigsTest_Project");
 		ensureExistsInWorkspace(new IProject[] {project}, true);
-		variant0 = new BuildConfiguration(project, variantId0);
-		variant0.setName(null);
-		variant1 = new BuildConfiguration(project, variantId1);
-		variant1.setName("name1");
-		variant2 = new BuildConfiguration(project, variantId2);
-		variant2.setName("name2");
+		variant0 = new BuildConfiguration(project, variantId0, null);
+		variant1 = new BuildConfiguration(project, variantId1, "name1");
+		variant2 = new BuildConfiguration(project, variantId2, "name2");
 		defaultVariant = new BuildConfiguration(project, IBuildConfiguration.DEFAULT_CONFIG_ID);
 	}
 
@@ -57,9 +54,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 	public void testBasics() throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		IBuildConfiguration[] configs = new IBuildConfiguration[] {project.newBuildConfiguration(variantId0), project.newBuildConfiguration(variantId1)};
-		configs[0].setName(null);
-		configs[1].setName("name1");
+		IBuildConfiguration[] configs = new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variantId0, null), getWorkspace().newBuildConfiguration(project.getName(), variantId1, "name1")};
 		desc.setBuildConfigurations(configs);
 		project.setDescription(desc, getMonitor());
 
@@ -90,7 +85,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 	public void testDuplicates() throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setBuildConfigurations(new IBuildConfiguration[] {project.newBuildConfiguration(variantId0), project.newBuildConfiguration(variantId1), project.newBuildConfiguration(variantId0)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variantId0, null), getWorkspace().newBuildConfiguration(project.getName(), variantId1, null), getWorkspace().newBuildConfiguration(project.getName(), variantId0, null)});
 		project.setDescription(desc, getMonitor());
 		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigurations());
 	}
