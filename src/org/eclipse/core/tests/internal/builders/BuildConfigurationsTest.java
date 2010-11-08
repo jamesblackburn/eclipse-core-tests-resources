@@ -11,7 +11,6 @@ package org.eclipse.core.tests.internal.builders;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.eclipse.core.internal.resources.BuildConfigReference;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
@@ -74,7 +73,7 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 		desc.setBuildSpec(new ICommand[] {command});
 
 		// Create buildConfigs
-		desc.setBuildConfigurations(new IBuildConfiguration[] {desc.newBuildConfiguration(variant0), desc.newBuildConfiguration(variant1), desc.newBuildConfiguration(variant2)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variant0, null), getWorkspace().newBuildConfiguration(project.getName(), variant1, null), getWorkspace().newBuildConfiguration(project.getName(), variant2, null)});
 
 		project.setDescription(desc, getMonitor());
 	}
@@ -133,10 +132,10 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 		ConfigurationBuilder.clearStats();
 		ConfigurationBuilder.clearBuildOrder();
 		IProjectDescription desc = project0.getDescription();
-		project0.setActiveBuildConfiguration(variant0);
+		desc.setActiveBuildConfiguration(variant0);
 		project0.setDescription(desc, getMonitor());
 		desc = project1.getDescription();
-		project1.setActiveBuildConfiguration(variant0);
+		desc.setActiveBuildConfiguration(variant0);
 		project1.setDescription(desc, getMonitor());
 
 		// Note: references are not alphabetically ordered to check that references are sorted into a stable order
@@ -186,12 +185,9 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 	/**
 	 * Helper method to set the references for a project.
 	 */
-	private void setReferences(IProject project, String variant, IBuildConfiguration[] variants) throws CoreException {
+	private void setReferences(IProject project, String configId, IBuildConfiguration[] configs) throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		IBuildConfigReference[] refs = new IBuildConfigReference[variants.length];
-		for (int i = 0; i < variants.length; i++)
-			refs[i] = new BuildConfigReference(variants[i]);
-		desc.setReferencedProjectConfigs(variant, refs);
+		desc.setDynamicConfigReferences(configId, configs);
 		project.setDescription(desc, getMonitor());
 	}
 
@@ -207,10 +203,7 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 	 * Clean the specified project variant.
 	 */
 	private void clean(int testId, IProject project, String variant, int expectedCount) throws CoreException {
-		IProjectDescription desc = project.getDescription();
-		project.setActiveBuildConfiguration(variant);
-		project.setDescription(desc, getMonitor());
-		project.build(IncrementalProjectBuilder.CLEAN_BUILD, getMonitor());
+		project.build(project.getBuildConfiguration(variant), IncrementalProjectBuilder.CLEAN_BUILD, getMonitor());
 		ConfigurationBuilder builder = ConfigurationBuilder.getBuilder(project.getBuildConfiguration(variant));
 		assertNotNull(testId + ".0", builder);
 		assertEquals(testId + ".1", expectedCount, builder.buildCount);

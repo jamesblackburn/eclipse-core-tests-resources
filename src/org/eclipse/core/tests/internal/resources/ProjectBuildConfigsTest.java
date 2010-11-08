@@ -41,12 +41,9 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 	public void setUp() throws Exception {
 		project = getWorkspace().getRoot().getProject("ProjectBuildConfigsTest_Project");
 		ensureExistsInWorkspace(new IProject[] {project}, true);
-		variant0 = new BuildConfiguration(project, variantId0);
-		variant0.setName(null);
-		variant1 = new BuildConfiguration(project, variantId1);
-		variant1.setName("name1");
-		variant2 = new BuildConfiguration(project, variantId2);
-		variant2.setName("name2");
+		variant0 = new BuildConfiguration(project, variantId0, null);
+		variant1 = new BuildConfiguration(project, variantId1, "name1");
+		variant2 = new BuildConfiguration(project, variantId2, "name2");
 		defaultVariant = new BuildConfiguration(project, IBuildConfiguration.DEFAULT_CONFIG_ID);
 	}
 
@@ -57,9 +54,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 	public void testBasics() throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		IBuildConfiguration[] configs = new IBuildConfiguration[] {desc.newBuildConfiguration(variantId0), desc.newBuildConfiguration(variantId1)};
-		configs[0].setName(null);
-		configs[1].setName("name1");
+		IBuildConfiguration[] configs = new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variantId0, null), getWorkspace().newBuildConfiguration(project.getName(), variantId1, "name1")};
 		desc.setBuildConfigurations(configs);
 		project.setDescription(desc, getMonitor());
 
@@ -76,11 +71,11 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 		assertEquals("3.0", variant0, project.getActiveBuildConfiguration());
 		desc = project.getDescription();
-		project.setActiveBuildConfiguration(variantId1);
+		desc.setActiveBuildConfiguration(variantId1);
 		project.setDescription(desc, getMonitor());
 		assertEquals("3.1", variant1, project.getActiveBuildConfiguration());
 		// test that setting the variant to an invalid id has no effect
-		project.setActiveBuildConfiguration(variantId2);
+		desc.setActiveBuildConfiguration(variantId2);
 		assertEquals("3.2", variant1, project.getActiveBuildConfiguration());
 
 		IBuildConfiguration variant = project.getBuildConfigurations()[0];
@@ -90,7 +85,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 	public void testDuplicates() throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setBuildConfigurations(new IBuildConfiguration[] {desc.newBuildConfiguration(variantId0), desc.newBuildConfiguration(variantId1), desc.newBuildConfiguration(variantId0)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variantId0, null), getWorkspace().newBuildConfiguration(project.getName(), variantId1, null), getWorkspace().newBuildConfiguration(project.getName(), variantId0, null)});
 		project.setDescription(desc, getMonitor());
 		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigurations());
 	}
@@ -105,7 +100,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 		assertEquals("2.0", defaultVariant, project.getActiveBuildConfiguration());
 		desc = project.getDescription();
-		project.setActiveBuildConfiguration(IBuildConfiguration.DEFAULT_CONFIG_ID);
+		desc.setActiveBuildConfiguration(IBuildConfiguration.DEFAULT_CONFIG_ID);
 		project.setDescription(desc, getMonitor());
 		assertEquals("2.1", defaultVariant, project.getActiveBuildConfiguration());
 	}
@@ -120,10 +115,37 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		project.setDescription(desc, getMonitor());
 		assertEquals("2.0", variant0, project.getActiveBuildConfiguration());
 		desc = project.getDescription();
-		project.setActiveBuildConfiguration(variantId2);
+		desc.setActiveBuildConfiguration(variantId2);
 		project.setDescription(desc, getMonitor());
 		desc.setBuildConfigurations(new IBuildConfiguration[] {variant0, variant1});
 		project.setDescription(desc, getMonitor());
 		assertEquals("3.0", variant0, project.getActiveBuildConfiguration());
+	}
+
+	/**
+	 * Tests that build configuration references are correct after moving a project
+	 * @throws CoreException
+	 */
+	public void testProjectMove() throws CoreException {
+		IProjectDescription desc = project.getDescription();
+		IBuildConfiguration[] configs = new IBuildConfiguration[] {variant0, variant1};
+		desc.setBuildConfigurations(configs);
+		project.setDescription(desc, getMonitor());
+
+		// Move the project. The build configurations should point at the new project
+		String newProjectName = "projectMoved";
+		desc = project.getDescription();
+		desc.setName(newProjectName);
+		project.move(desc, false, getMonitor());
+
+		IProject newProject = getWorkspace().getRoot().getProject(newProjectName);
+		assertTrue("1.0", newProject.exists());
+
+		IBuildConfiguration[] newConfigs = newProject.getBuildConfigurations();
+		for (int i = 0; i < configs.length; i++) {
+			assertEquals("2." + i * 3, newProject, newConfigs[i].getProject());
+			assertEquals("2." + i * 3 + 1, configs[i].getConfigurationId(), newConfigs[i].getConfigurationId());
+			assertEquals("2." + i * 3 + 2, configs[i].getName(), newConfigs[i].getName());
+		}
 	}
 }
