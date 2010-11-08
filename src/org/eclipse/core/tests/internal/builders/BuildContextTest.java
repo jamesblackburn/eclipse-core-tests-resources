@@ -15,7 +15,7 @@ import java.util.Comparator;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.eclipse.core.internal.events.BuildContext;
-import org.eclipse.core.internal.resources.BuildConfigReference;
+import org.eclipse.core.internal.resources.BuildConfiguration;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
@@ -85,7 +85,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 		desc.setBuildSpec(new ICommand[] {command});
 
 		// Create buildConfigs
-		desc.setBuildConfigurations(new IBuildConfiguration[] {desc.newBuildConfiguration(variant0), desc.newBuildConfiguration(variant1)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {project.getWorkspace().newBuildConfiguration(project.getName(), variant0, null), project.getWorkspace().newBuildConfiguration(project.getName(), variant1, null)});
 
 		project.setDescription(desc, getMonitor());
 	}
@@ -105,10 +105,10 @@ public class BuildContextTest extends AbstractBuilderTest {
 
 		IBuildContext context;
 
-		context = new BuildContext(p0v0, new IBuildConfiguration[] {p0v0, p0v1}, buildOrder);
+		context = new BuildContext(p0v0, new IBuildConfiguration[] {p0v0, p1v0}, buildOrder);
 		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {}, context.getAllReferencedBuildConfigurations());
 		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p0v1, p1v0}, context.getAllReferencingBuildConfigurations());
-		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p0v1, p1v0}, context.getRequestedConfigs());
+		assertArraysContainSameElements("1.1", new IBuildConfiguration[] {p0v0, p1v0}, context.getRequestedConfigs());
 
 		context = new BuildContext(p0v1, buildOrder, buildOrder);
 		assertArraysContainSameElements("1.0", new IBuildConfiguration[] {p0v0}, context.getAllReferencedBuildConfigurations());
@@ -170,9 +170,9 @@ public class BuildContextTest extends AbstractBuilderTest {
 	}
 
 	public void testReferenceActiveVariant() throws CoreException {
-		setReferences(project0.getActiveBuildConfiguration(), new IBuildConfigReference[] {new BuildConfigReference(project1)});
-		setReferences(project1.getActiveBuildConfiguration(), new IBuildConfigReference[] {new BuildConfigReference(project2)});
-		setReferences(project2.getActiveBuildConfiguration(), new IBuildConfigReference[] {});
+		setReferences(project0.getActiveBuildConfiguration(), new IBuildConfiguration[] {new BuildConfiguration(project1, null)});
+		setReferences(project1.getActiveBuildConfiguration(), new IBuildConfiguration[] {new BuildConfiguration(project2, null)});
+		setReferences(project2.getActiveBuildConfiguration(), new IBuildConfiguration[] {});
 
 		ContextBuilder.clearStats();
 
@@ -195,11 +195,10 @@ public class BuildContextTest extends AbstractBuilderTest {
 	 * and the same variant directly. This should only result in one referenced variant being built.
 	 */
 	public void testReferenceVariantTwice() throws CoreException {
-		IBuildConfigReference ref1 = project1.newReference();
-		IBuildConfigReference ref2 = project1.newReference();
-		ref2.setConfigurationId(project1.getActiveBuildConfiguration().getConfigurationId());
-		setReferences(project0.getActiveBuildConfiguration(), new IBuildConfigReference[] {ref1, ref2});
-		setReferences(project1.getActiveBuildConfiguration(), new IBuildConfigReference[] {});
+		IBuildConfiguration ref1 = new BuildConfiguration(project1, null);
+		IBuildConfiguration ref2 = new BuildConfiguration(project1, project1.getActiveBuildConfiguration().getConfigurationId());
+		setReferences(project0.getActiveBuildConfiguration(), new IBuildConfiguration[] {ref1, ref2});
+		setReferences(project1.getActiveBuildConfiguration(), new IBuildConfiguration[] {});
 
 		ContextBuilder.clearStats();
 
@@ -232,20 +231,10 @@ public class BuildContextTest extends AbstractBuilderTest {
 	/**
 	 * Helper method to set the references for a project.
 	 */
-	private void setReferences(IBuildConfiguration variant, IBuildConfigReference[] refs) throws CoreException {
+	private void setReferences(IBuildConfiguration variant, IBuildConfiguration[] refs) throws CoreException {
 		IProjectDescription desc = variant.getProject().getDescription();
-		desc.setReferencedProjectConfigs(variant.getConfigurationId(), refs);
+		desc.setDynamicConfigReferences(variant.getConfigurationId(), refs);
 		variant.getProject().setDescription(desc, getMonitor());
-	}
-
-	/**
-	 * Helper method to set the references for a project.
-	 */
-	private void setReferences(IBuildConfiguration variant, IBuildConfiguration[] variants) throws CoreException {
-		IBuildConfigReference[] refs = new IBuildConfigReference[variants.length];
-		for (int i = 0; i < variants.length; i++)
-			refs[i] = new BuildConfigReference(variants[i]);
-		setReferences(variant, refs);
 	}
 
 	private void assertArraysContainSameElements(String id, IBuildConfiguration[] expected, IBuildConfiguration[] actual) {
