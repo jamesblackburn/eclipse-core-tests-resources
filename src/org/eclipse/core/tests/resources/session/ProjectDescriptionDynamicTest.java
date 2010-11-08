@@ -10,6 +10,7 @@
 package org.eclipse.core.tests.resources.session;
 
 import junit.framework.Test;
+import org.eclipse.core.internal.resources.BuildConfigReference;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.tests.resources.AutomatedTests;
 import org.eclipse.core.tests.resources.WorkspaceSessionTest;
@@ -35,18 +36,13 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 		IWorkspaceRoot wr = ResourcesPlugin.getWorkspace().getRoot();
 		// The project we're setting metadata on
 		proj = wr.getProject("referencing");
-		configs = new IBuildConfiguration[] {
-				proj.newBuildConfiguration("someConfiguration"),
-				proj.newBuildConfiguration("someConfiguration2")};
+		configs = new IBuildConfiguration[] {proj.newBuildConfiguration("someConfiguration"), proj.newBuildConfiguration("someConfiguration2")};
 
 		// The references:
 		// Dynamic Project level
-		dynRefs = new IProject[] { wr.getProject("ref1"), wr.getProject("ref2") };
+		dynRefs = new IProject[] {wr.getProject("ref1"), wr.getProject("ref2")};
 		// Dynamic Build Configuration level -- reverse order
-		configRefs = new IBuildConfigReference[] {
-				wr.getProject("ref3").newBuildConfigurationReference("ref3config1"),
-				wr.getProject("ref2").newBuildConfigurationReference("ref2config1"),
-				wr.getProject("ref1").newBuildConfigurationReference("ref1config1") };
+		configRefs = new IBuildConfigReference[] {wr.getProject("ref3").newBuildConfigurationReference("ref3config1"), wr.getProject("ref2").newBuildConfigurationReference("ref2config1"), wr.getProject("ref1").newBuildConfigurationReference("ref1config1")};
 		configRefsProjects = new IProject[] {wr.getProject("ref3"), wr.getProject("ref2"), wr.getProject("ref1")};
 		super.setUp();
 	}
@@ -101,13 +97,13 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 	public void test3() throws Exception {
 		assertTrue("2.0", proj.isAccessible());
 		assertEquals("2.1", configs[1], proj.getActiveBuildConfiguration());
-		assertEquals("2.1", configRefsProjects,  proj.getDescription().getDynamicReferences());
-		assertEquals("2.1", configRefs,  proj.getDescription().getDynamicConfigReferences(configs[1].getConfigurationId()));
+		assertEquals("2.1", configRefsProjects, proj.getDescription().getDynamicReferences());
+		IBuildConfigReference[] refs = new IBuildConfigReference[] {configRefs[0], configRefs[1], configRefs[2], new BuildConfigReference(dynRefs[0]), new BuildConfigReference(dynRefs[1])};
+		assertEquals("2.1", refs, proj.getDescription().getDynamicConfigReferences(configs[1].getConfigurationId()));
 	}
 
 	public static Test suite() {
-		return new WorkspaceSessionTestSuite(AutomatedTests.PI_RESOURCES_TESTS,
-				ProjectDescriptionDynamicTest.class);
+		return new WorkspaceSessionTestSuite(AutomatedTests.PI_RESOURCES_TESTS, ProjectDescriptionDynamicTest.class);
 	}
 
 }
