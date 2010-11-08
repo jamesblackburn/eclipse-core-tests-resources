@@ -214,6 +214,50 @@ public class ProjectReferencesTest extends ResourceTest {
 		}
 	}
 
+	/**
+	 * Tests that setting re-setting build configurations doesn't perturb the existing
+	 * configuration level references.
+	 *
+	 * Removing a build configuration removes associated build configuration references
+	 * @throws CoreException
+	 */
+	public void testChangingBuildConfigurations() throws CoreException {
+		IProjectDescription desc = project0.getDescription();
+		IBuildConfiguration[] refs = new IBuildConfiguration[] {project0v1, project1v0};
+		IBuildConfiguration[] refs2 = new IBuildConfiguration[] {project1v1, project1v0};
+
+		// Set some references
+		desc.setDynamicConfigReferences(project0v0.getConfigurationId(), refs);
+		desc.setDynamicConfigReferences(project0v1.getConfigurationId(), refs2);
+		project0.setDescription(desc, getMonitor());
+
+		// Check build configa
+		desc = project0.getDescription();
+		assertEquals("1.0", refs, desc.getDynamicConfigReferences(project0v0.getConfigurationId()));
+		assertEquals("1.0", refs2, desc.getDynamicConfigReferences(project0v1.getConfigurationId()));
+		// Resetting the build configs doesn't change anything
+		desc.setBuildConfigurations(new IBuildConfiguration[] {project0v0, project0v1});
+		project0.setDescription(desc, getMonitor());
+
+		desc = project0.getDescription();
+		assertEquals("1.0", refs, desc.getDynamicConfigReferences(project0v0.getConfigurationId()));
+		assertEquals("1.0", refs2, desc.getDynamicConfigReferences(project0v1.getConfigurationId()));
+		// Removing a build configuration removes the references
+		desc.setBuildConfigurations(new IBuildConfiguration[] {project0v0});
+		project0.setDescription(desc, getMonitor());
+
+		desc = project0.getDescription();
+		assertEquals("1.0", refs, desc.getDynamicConfigReferences(project0v0.getConfigurationId()));
+		assertEquals("1.0", new IBuildConfiguration[0], desc.getDynamicConfigReferences(project0v1.getConfigurationId()));
+		// Re-adding a build configuration doesn't make references re-appear
+		desc.setBuildConfigurations(new IBuildConfiguration[] {project0v0});
+		project0.setDescription(desc, getMonitor());
+
+		desc = project0.getDescription();
+		assertEquals("1.0", refs, desc.getDynamicConfigReferences(project0v0.getConfigurationId()));
+		assertEquals("1.0", new IBuildConfiguration[0], desc.getDynamicConfigReferences(project0v1.getConfigurationId()));
+	}
+
 	public void testReferencesToActiveVariants() throws CoreException {
 		IProjectDescription desc = project0.getDescription();
 		desc.setDynamicConfigReferences(bc0, new IBuildConfiguration[] {getRef(project1)});
