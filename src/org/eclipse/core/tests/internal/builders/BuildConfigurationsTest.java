@@ -3,7 +3,7 @@
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  * Broadcom Corporation - initial API and implementation
  ******************************************************************************/
@@ -118,7 +118,7 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 
 	/**
 	 * Run a workspace build with project references
-	 * 
+	 *
 	 * References are:
 	 *     p0,v0 depends on p0,v1
 	 *     p0,v0 depends on p1,v0
@@ -169,6 +169,50 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 		checkBuild(12, project1, variant0, true, 2, IncrementalProjectBuilder.INCREMENTAL_BUILD);
 		checkBuild(13, project1, variant1, false, 0, 0);
 		checkBuild(14, project1, variant2, true, 2, IncrementalProjectBuilder.INCREMENTAL_BUILD);
+	}
+
+	/**
+	 * Tests that building a configuration that references a closed / inaccessible project works correctly.
+	 * References are:
+	 *     p0,v0 depends on p1,v0
+	 * p1 is closed.
+	 * p0v0 should still be built.
+	 * @throws CoreException
+	 */
+	public void testBuildReferencesOfClosedProject() throws CoreException {
+		ConfigurationBuilder.clearStats();
+		ConfigurationBuilder.clearBuildOrder();
+		IProjectDescription desc = project0.getDescription();
+		desc.setActiveBuildConfiguration(variant0);
+		desc.setDynamicConfigReferences(variant0, new IBuildConfiguration[] {project1.getBuildConfiguration(variant0)});
+		project0.setDescription(desc, getMonitor());
+
+		// close project 1
+		project1.close(getMonitor());
+		// should still be able to build project 0.
+		getWorkspace().build(new IBuildConfiguration[] {project0.getBuildConfiguration(variant0)}, IncrementalProjectBuilder.FULL_BUILD, true, getMonitor());
+		assertEquals("1.0", 1, ConfigurationBuilder.buildOrder.size());
+		assertEquals("1.1", project0.getBuildConfiguration(variant0), ConfigurationBuilder.buildOrder.get(0));
+		checkBuild(2, project0, variant0, true, 1, IncrementalProjectBuilder.FULL_BUILD);
+
+		// Workspace full build should also build project 0
+		ConfigurationBuilder.clearStats();
+		ConfigurationBuilder.clearBuildOrder();
+		getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+		assertEquals("1.0", 1, ConfigurationBuilder.buildOrder.size());
+		assertEquals("1.1", project0.getBuildConfiguration(variant0), ConfigurationBuilder.buildOrder.get(0));
+		checkBuild(2, project0, variant0, true, 1, IncrementalProjectBuilder.FULL_BUILD);
+
+		// re-open project 1
+		project1.open(getMonitor());
+
+		ConfigurationBuilder.clearStats();
+		ConfigurationBuilder.clearBuildOrder();
+		getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, getMonitor());
+
+		assertEquals("8.0", 2, ConfigurationBuilder.buildOrder.size());
+		assertEquals("8.1", project1.getBuildConfiguration(variant0), ConfigurationBuilder.buildOrder.get(0));
+		assertEquals("8.2", project0.getBuildConfiguration(variant0), ConfigurationBuilder.buildOrder.get(1));
 	}
 
 	/**
