@@ -35,7 +35,6 @@ public class ProjectReferencesTest extends ResourceTest {
 	private IBuildConfiguration project1v0;
 	private IBuildConfiguration project1v1;
 	private IBuildConfiguration project2v0;
-	private IBuildConfiguration project2v1;
 	private IBuildConfiguration project3v0;
 	private IBuildConfiguration project3v1;
 	private String bc0 = "Variant0";
@@ -61,7 +60,6 @@ public class ProjectReferencesTest extends ResourceTest {
 		project1v0 = new BuildConfiguration(project1, bc0);
 		project1v1 = new BuildConfiguration(project1, bc1);
 		project2v0 = new BuildConfiguration(project2, bc0);
-		project2v1 = new BuildConfiguration(project2, bc1);
 		project3v0 = new BuildConfiguration(project3, bc0);
 		project3v1 = new BuildConfiguration(project3, bc1);
 	}
@@ -120,7 +118,6 @@ public class ProjectReferencesTest extends ResourceTest {
 		desc = project0.getDescription();
 		assertEquals("1.0", new IProject[] {project3, project1}, desc.getReferencedProjects());
 		assertEquals("1.1", new IProject[] {project1, project2}, desc.getDynamicReferences());
-		assertEquals("1.2", new IBuildConfigReference[] {getRef(project3), getRef(project1)}, desc.getReferencedProjectConfigs(bc0));
 		assertEquals("1.3", new IBuildConfigReference[] {getRef(project1), getRef(project2)}, desc.getDynamicConfigReferences(bc0));
 
 		assertEquals("2.0", new IProject[] {project3, project1, project2}, project0.getReferencedProjects());
@@ -132,47 +129,38 @@ public class ProjectReferencesTest extends ResourceTest {
 	public void testSetAndGetProjectVariantReferences() throws CoreException {
 		// Set project variant references
 		IProjectDescription desc = project0.getDescription();
-		desc.setReferencedProjectConfigs(bc0, new IBuildConfigReference[] {getRef(project1v0)});
+		// 1 static reference
+		desc.setReferencedProjects(new IProject[] {project1});
+		// 1 dynamic project-level reference
+		desc.setDynamicReferences(new IProject[] {project3});
+		// config level references
 		desc.setDynamicConfigReferences(bc0, new IBuildConfigReference[] {getRef(project2v0), getRef(project1v0)});
-		desc.setReferencedProjectConfigs(bc1, new IBuildConfigReference[] {getRef(project1v1)});
 		desc.setDynamicConfigReferences(bc1, new IBuildConfigReference[] {getRef(project2v0)});
 		project0.setDescription(desc, getMonitor());
 
 		desc = project1.getDescription();
-		desc.setReferencedProjectConfigs(bc0, new IBuildConfigReference[] {getRef(project0v0)});
+		desc.setReferencedProjects(new IProject[] {project0});
 		desc.setDynamicConfigReferences(bc0, new IBuildConfigReference[] {getRef(project0v1)});
-		desc.setReferencedProjectConfigs(bc1, new IBuildConfigReference[] {});
 		desc.setDynamicConfigReferences(bc1, new IBuildConfigReference[] {});
 		project1.setDescription(desc, getMonitor());
 
-		desc = project2.getDescription();
-		desc.setReferencedProjectConfigs(bc0, new IBuildConfigReference[] {});
-		desc.setDynamicConfigReferences(bc0, new IBuildConfigReference[] {});
-		desc.setReferencedProjectConfigs(bc1, new IBuildConfigReference[] {getRef(project0v0)});
-		desc.setDynamicConfigReferences(bc1, new IBuildConfigReference[] {});
-		project2.setDescription(desc, getMonitor());
-
 		desc = project3.getDescription();
-		desc.setReferencedProjectConfigs(bc0, new IBuildConfigReference[] {});
 		desc.setDynamicConfigReferences(bc0, new IBuildConfigReference[] {getRef(project0v1)});
-		desc.setReferencedProjectConfigs(bc1, new IBuildConfigReference[] {});
 		desc.setDynamicConfigReferences(bc1, new IBuildConfigReference[] {});
 		project3.setDescription(desc, getMonitor());
 
 		// Check getters
 		desc = project0.getDescription();
 		assertEquals("1.0", new IProject[] {project1}, desc.getReferencedProjects());
-		assertEquals("1.1", new IProject[] {project2, project1}, desc.getDynamicReferences());
-		assertEquals("1.2", new IBuildConfigReference[] {getRef(project1v0)}, desc.getReferencedProjectConfigs(bc0));
-		assertEquals("1.3", new IBuildConfigReference[] {getRef(project2v0), getRef(project1v0)}, desc.getDynamicConfigReferences(bc0));
-		assertEquals("1.4", new IBuildConfigReference[] {getRef(project1v1)}, desc.getReferencedProjectConfigs(bc1));
-		assertEquals("1.5", new IBuildConfigReference[] {getRef(project2v0)}, desc.getDynamicConfigReferences(bc1));
+		assertEquals("1.1", new IProject[] {project2, project1, project3}, desc.getDynamicReferences());
+		assertEquals("1.3", new IBuildConfigReference[] {getRef(project2v0), getRef(project1v0), getRef(project3)}, desc.getDynamicConfigReferences(bc0));
+		assertEquals("1.5", new IBuildConfigReference[] {getRef(project2v0), getRef(project3)}, desc.getDynamicConfigReferences(bc1));
 
-		assertEquals("2.0", new IProject[] {project1, project2}, project0.getReferencedProjects());
-		assertEquals("2.1", new IProject[] {project1, project2, project3}, project0.getReferencingProjects());
-		assertEquals("2.2", new IBuildConfiguration[] {project1v0, project2v0}, project0.getReferencedBuildConfigurations(project0v0));
-		assertEquals("2.3", new IBuildConfiguration[] {project1v1, project2v0}, project0.getReferencedBuildConfigurations(project0v1));
-		assertEquals("2.4", new IBuildConfiguration[] {project1v0, project2v1}, project0.getReferencingBuildConfigurations(project0v0));
+		assertEquals("2.0", new IProject[] {project2, project1, project3}, project0.getReferencedProjects());
+		assertEquals("2.1", new IProject[] {project1, project3}, project0.getReferencingProjects());
+		assertEquals("2.2", new IBuildConfiguration[] {project2v0, project1v0, project1.getActiveBuildConfiguration(), project3.getActiveBuildConfiguration()}, project0.getReferencedBuildConfigurations(project0v0));
+		assertEquals("2.3", new IBuildConfiguration[] {project2v0, project1.getActiveBuildConfiguration(), project3.getActiveBuildConfiguration()}, project0.getReferencedBuildConfigurations(project0v1));
+		assertEquals("2.4", new IBuildConfiguration[] {project1v0, project1v1}, project0.getReferencingBuildConfigurations(project0v0));
 		assertEquals("2.5", new IBuildConfiguration[] {project1v0, project3v0}, project0.getReferencingBuildConfigurations(project0v1));
 	}
 
@@ -190,22 +178,22 @@ public class ProjectReferencesTest extends ResourceTest {
 		// Check getters
 		desc = project0.getDescription();
 		assertEquals("1.1", new IProject[] {project1, project3}, desc.getDynamicReferences());
-		assertEquals("1.2", new IBuildConfigReference[] {new BuildConfigReference(project1), new BuildConfigReference(project3)}, 
+		assertEquals("1.2", new IBuildConfigReference[] {new BuildConfigReference(project1), new BuildConfigReference(project3)},
 														desc.getDynamicConfigReferences(project0v0.getConfigurationId()));
-		assertEquals("1.3", new IBuildConfigReference[] {new BuildConfigReference(project1), new BuildConfigReference(project3)}, 
+		assertEquals("1.3", new IBuildConfigReference[] {new BuildConfigReference(project1), new BuildConfigReference(project3)},
 														desc.getDynamicConfigReferences(project0v1.getConfigurationId()));
 
 		// Now set dynamic references on config1
 		desc.setDynamicConfigReferences(project0v0.getConfigurationId(), new IBuildConfigReference[] {getRef(project3v1), getRef(project2v0), getRef(project1v0)});
 		project0.setDescription(desc, getMonitor());
-		
+
 		// Check references
 		// This is deterministic as config0 is listed first, so we expect its config order to trump cofig1's
 		desc = project0.getDescription();
 		assertEquals("2.1", new IProject[] {project3, project2, project1}, desc.getDynamicReferences());
-		assertEquals("2.2", new IBuildConfigReference[] {getRef(project3v1), getRef(project2v0), getRef(project1v0)}, 
+		assertEquals("2.2", new IBuildConfigReference[] {getRef(project3v1), getRef(project2v0), getRef(project1v0), getRef(project1), getRef(project3)},
 														desc.getDynamicConfigReferences(project0v0.getConfigurationId()));
-		assertEquals("2.3", new IBuildConfigReference[] {new BuildConfigReference(project1), new BuildConfigReference(project3)}, 
+		assertEquals("2.3", new IBuildConfigReference[] {new BuildConfigReference(project1), new BuildConfigReference(project3)},
 														desc.getDynamicConfigReferences(project0v1.getConfigurationId()));
 	}
 
@@ -214,13 +202,11 @@ public class ProjectReferencesTest extends ResourceTest {
 
 		assertFalse("1.0", project0.hasBuildConfiguration(project0.newBuildConfiguration(nonExistentBC)));
 
-		desc.setReferencedProjectConfigs(nonExistentBC, new IBuildConfigReference[] {getRef(project1v0)});
 		desc.setDynamicConfigReferences(nonExistentBC, new IBuildConfigReference[] {getRef(project1v0)});
 		project0.setDescription(desc, getMonitor());
 
 		assertFalse("2.0", project0.hasBuildConfiguration(project0.newBuildConfiguration(nonExistentBC)));
 
-		assertEquals("3.0", new IBuildConfigReference[0], desc.getReferencedProjectConfigs(nonExistentBC));
 		assertEquals("3.1", new IBuildConfigReference[0], desc.getDynamicConfigReferences(nonExistentBC));
 		try {
 			project0.getReferencedBuildConfigurations(project0.newBuildConfiguration(nonExistentBC));
@@ -231,10 +217,10 @@ public class ProjectReferencesTest extends ResourceTest {
 
 	public void testReferencesToActiveVariants() throws CoreException {
 		IProjectDescription desc = project0.getDescription();
-		desc.setReferencedProjectConfigs(bc0, new IBuildConfigReference[] {project1.newBuildConfigurationReference(null)});
+		desc.setDynamicConfigReferences(bc0, new IBuildConfigReference[] {project1.newBuildConfigurationReference(null)});
 		project0.setDescription(desc, getMonitor());
 
-		assertEquals("1.0", new IBuildConfigReference[] {new BuildConfigReference(project1)}, desc.getReferencedProjectConfigs(bc0));
+		assertEquals("1.0", new IBuildConfigReference[] {new BuildConfigReference(project1)}, desc.getDynamicConfigReferences(bc0));
 		assertEquals("1.0", new IBuildConfiguration[] {project1v0}, project0.getReferencedBuildConfigurations(project0v0));
 	}
 }

@@ -85,7 +85,7 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 
 		// set build configuration level dynamic references on the project
 		IProjectDescription desc = proj.getDescription();
-		desc.setDynamicConfigReferences(configs[0].getConfigurationId(), configRefs);
+		desc.setDynamicConfigReferences(configs[1].getConfigurationId(), configRefs);
 		// Change the active configuration
 		desc.setActiveBuildConfiguration(configs[1].getConfigurationId());
 		proj.setDescription(desc, getMonitor());
@@ -103,7 +103,7 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 		assertTrue("2.0", proj.isAccessible());
 		assertEquals("2.1", configs[1], proj.getActiveBuildConfiguration());
 		assertEquals("2.1", configRefsProjects,  proj.getDescription().getDynamicReferences());
-		assertEquals("2.1", configRefs,  proj.getDescription().getDynamicConfigReferences(configs[0].getConfigurationId()));
+		assertEquals("2.1", configRefs,  proj.getDescription().getDynamicConfigReferences(configs[1].getConfigurationId()));
 	}
 
 	public static Test suite() {
