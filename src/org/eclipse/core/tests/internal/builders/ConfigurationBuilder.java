@@ -53,6 +53,7 @@ public class ConfigurationBuilder extends TestBuilder {
 	}
 
 	protected void startupOnInitialize() {
+		super.startupOnInitialize();
 		builders.put(getBuildConfiguration(), this);
 		buildCount = 0;
 	}
