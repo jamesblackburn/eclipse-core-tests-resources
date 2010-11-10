@@ -55,10 +55,7 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 		// Dynamic Project level
 		dynRefs = new IProject[] {wr.getProject("ref1"), wr.getProject("ref2")};
 		// Dynamic Build Configuration level -- reverse order
-		configRefs = new IBuildConfiguration[] {
-				getWorkspace().newBuildConfiguration("ref3", "ref3config1", null), 
-				getWorkspace().newBuildConfiguration("ref2", "ref2config1", null), 
-				getWorkspace().newBuildConfiguration("ref1", "ref1config1", null)};
+		configRefs = new IBuildConfiguration[] {getWorkspace().newBuildConfiguration("ref3", "ref3config1", null), getWorkspace().newBuildConfiguration("ref2", "ref2config1", null), getWorkspace().newBuildConfiguration("ref1", "ref1config1", null)};
 		configRefsProjects = new IProject[] {wr.getProject("ref3"), wr.getProject("ref2"), wr.getProject("ref1")};
 		super.setUp();
 	}
@@ -96,9 +93,9 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 
 		// set build configuration level dynamic references on the project
 		IProjectDescription desc = proj.getDescription();
-		desc.setDynamicConfigReferences(configs[1].getConfigurationId(), configRefs);
+		desc.setBuildConfigReferences(configs[1].getId(), configRefs);
 		// Change the active configuration
-		desc.setActiveBuildConfiguration(configs[1].getConfigurationId());
+		desc.setActiveBuildConfiguration(configs[1].getId());
 		proj.setDescription(desc, getMonitor());
 
 		ResourcesPlugin.getWorkspace().save(true, getMonitor());
@@ -113,10 +110,18 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 	public void test3() throws Exception {
 		assertTrue("2.0", proj.isAccessible());
 		assertEquals("2.1", configs[1], proj.getActiveBuildConfiguration());
-		assertEquals("2.1", configRefsProjects, proj.getDescription().getDynamicReferences());
-		IBuildConfiguration[] refs = new IBuildConfiguration[] {
-				configRefs[0], configRefs[1], configRefs[2], getRef(dynRefs[0]), getRef(dynRefs[1])};
-		assertEquals("2.1", refs, proj.getDescription().getDynamicConfigReferences(configs[1].getConfigurationId()));
+		// At description dynamic refs are what was set
+		assertEquals("2.2", dynRefs, proj.getDescription().getDynamicReferences());
+		// At project all references are union of build configuration and project references		
+		assertEquals("2.4", configRefsProjects, proj.getReferencedProjects());
+
+		// At the description level, dynamic config references match what was set.
+		assertEquals("2.5", configRefs, proj.getDescription().getBuildConfigReferences(configs[1].getId()));
+		// At the project level, references are the union of project and build configuration level references
+		IBuildConfiguration[] refs = new IBuildConfiguration[] {configRefs[0], configRefs[1], configRefs[2], getRef(dynRefs[0]), getRef(dynRefs[1])};
+		assertEquals("2.6", refs, proj.getReferencedBuildConfigurations(configs[1], true));
+		// No other projects exist, so check references are empty if we want to filter empty projects
+		assertEquals("2.7", new IBuildConfiguration[0], proj.getReferencedBuildConfigurations(configs[1], false));
 	}
 
 	public static Test suite() {
