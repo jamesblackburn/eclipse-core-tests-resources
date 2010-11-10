@@ -184,7 +184,7 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 		ConfigurationBuilder.clearBuildOrder();
 		IProjectDescription desc = project0.getDescription();
 		desc.setActiveBuildConfiguration(variant0);
-		desc.setDynamicConfigReferences(variant0, new IBuildConfiguration[] {project1.getBuildConfiguration(variant0)});
+		desc.setBuildConfigReferences(variant0, new IBuildConfiguration[] {project1.getBuildConfiguration(variant0)});
 		project0.setDescription(desc, getMonitor());
 
 		// close project 1
@@ -231,7 +231,7 @@ public class BuildConfigurationsTest extends AbstractBuilderTest {
 	 */
 	private void setReferences(IProject project, String configId, IBuildConfiguration[] configs) throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setDynamicConfigReferences(configId, configs);
+		desc.setBuildConfigReferences(configId, configs);
 		project.setDescription(desc, getMonitor());
 	}
 

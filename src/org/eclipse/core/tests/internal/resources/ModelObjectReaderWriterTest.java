@@ -778,7 +778,7 @@ public class ModelObjectReaderWriterTest extends ResourceTest {
 		assertTrue("1.0", description.getName().equals(description2.getName()));
 		assertEquals("2.0", location, description.getLocationURI());
 
-		IBuildConfiguration[] variants2 = description2.internalGetBuildConfigs(false);
+		IBuildConfiguration[] variants2 = description2.getBuildConfigurations(false);
 		assertEquals("3.0", 3, variants2.length);
 		assertEquals("3.1", variants2[0], variants[0]);
 		assertEquals("3.2", variants2[1], variants[1]);

@@ -80,7 +80,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 		IBuildConfiguration variant = project.getBuildConfigurations()[0];
 		assertEquals("4.0", project, variant.getProject());
-		assertEquals("4.1", variantId0, variant.getConfigurationId());
+		assertEquals("4.1", variantId0, variant.getId());
 	}
 
 	public void testDuplicates() throws CoreException {
@@ -144,7 +144,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		IBuildConfiguration[] newConfigs = newProject.getBuildConfigurations();
 		for (int i = 0; i < configs.length; i++) {
 			assertEquals("2." + i * 3, newProject, newConfigs[i].getProject());
-			assertEquals("2." + i * 3 + 1, configs[i].getConfigurationId(), newConfigs[i].getConfigurationId());
+			assertEquals("2." + i * 3 + 1, configs[i].getId(), newConfigs[i].getId());
 			assertEquals("2." + i * 3 + 2, configs[i].getName(), newConfigs[i].getName());
 		}
 	}

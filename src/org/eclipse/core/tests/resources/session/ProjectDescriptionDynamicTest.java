@@ -55,10 +55,7 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 		// Dynamic Project level
 		dynRefs = new IProject[] {wr.getProject("ref1"), wr.getProject("ref2")};
 		// Dynamic Build Configuration level -- reverse order
-		configRefs = new IBuildConfiguration[] {
-				getWorkspace().newBuildConfiguration("ref3", "ref3config1", null), 
-				getWorkspace().newBuildConfiguration("ref2", "ref2config1", null), 
-				getWorkspace().newBuildConfiguration("ref1", "ref1config1", null)};
+		configRefs = new IBuildConfiguration[] {getWorkspace().newBuildConfiguration("ref3", "ref3config1", null), getWorkspace().newBuildConfiguration("ref2", "ref2config1", null), getWorkspace().newBuildConfiguration("ref1", "ref1config1", null)};
 		configRefsProjects = new IProject[] {wr.getProject("ref3"), wr.getProject("ref2"), wr.getProject("ref1")};
 		super.setUp();
 	}
@@ -96,9 +93,9 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 
 		// set build configuration level dynamic references on the project
 		IProjectDescription desc = proj.getDescription();
-		desc.setDynamicConfigReferences(configs[1].getConfigurationId(), configRefs);
+		desc.setBuildConfigReferences(configs[1].getId(), configRefs);
 		// Change the active configuration
-		desc.setActiveBuildConfiguration(configs[1].getConfigurationId());
+		desc.setActiveBuildConfiguration(configs[1].getId());
 		proj.setDescription(desc, getMonitor());
 
 		ResourcesPlugin.getWorkspace().save(true, getMonitor());
@@ -114,9 +111,8 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 		assertTrue("2.0", proj.isAccessible());
 		assertEquals("2.1", configs[1], proj.getActiveBuildConfiguration());
 		assertEquals("2.1", configRefsProjects, proj.getDescription().getDynamicReferences());
-		IBuildConfiguration[] refs = new IBuildConfiguration[] {
-				configRefs[0], configRefs[1], configRefs[2], getRef(dynRefs[0]), getRef(dynRefs[1])};
-		assertEquals("2.1", refs, proj.getDescription().getDynamicConfigReferences(configs[1].getConfigurationId()));
+		IBuildConfiguration[] refs = new IBuildConfiguration[] {configRefs[0], configRefs[1], configRefs[2], getRef(dynRefs[0]), getRef(dynRefs[1])};
+		assertEquals("2.1", refs, proj.getDescription().getBuildConfigReferences(configs[1].getId()));
 	}
 
 	public static Test suite() {
