@@ -196,7 +196,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 	 */
 	public void testReferenceVariantTwice() throws CoreException {
 		IBuildConfiguration ref1 = new BuildConfiguration(project1, null);
-		IBuildConfiguration ref2 = new BuildConfiguration(project1, project1.getActiveBuildConfiguration().getConfigurationId());
+		IBuildConfiguration ref2 = new BuildConfiguration(project1, project1.getActiveBuildConfiguration().getId());
 		setReferences(project0.getActiveBuildConfiguration(), new IBuildConfiguration[] {ref1, ref2});
 		setReferences(project1.getActiveBuildConfiguration(), new IBuildConfiguration[] {});
 
@@ -233,7 +233,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 	 */
 	private void setReferences(IBuildConfiguration variant, IBuildConfiguration[] refs) throws CoreException {
 		IProjectDescription desc = variant.getProject().getDescription();
-		desc.setDynamicConfigReferences(variant.getConfigurationId(), refs);
+		desc.setBuildConfigReferences(variant.getId(), refs);
 		variant.getProject().setDescription(desc, getMonitor());
 	}
 
@@ -244,7 +244,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 				IBuildConfiguration rightV = (IBuildConfiguration) right;
 				int ret = leftV.getProject().getName().compareTo(rightV.getProject().getName());
 				if (ret == 0)
-					ret = leftV.getConfigurationId().compareTo(rightV.getConfigurationId());
+					ret = leftV.getId().compareTo(rightV.getId());
 				return ret;
 			}
 		});
