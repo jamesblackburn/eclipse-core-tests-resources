@@ -89,14 +89,14 @@ public class ProjectReferencesTest extends ResourceTest {
 	 */
 	private void setUpVariants(IProject project) throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setBuildConfigurations(new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), bc0, null), getWorkspace().newBuildConfiguration(project.getName(), bc1, null)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), bc0), getWorkspace().newBuildConfiguration(project.getName(), bc1)});
 		project.setDescription(desc, getMonitor());
 	}
 
 	public void testAddReferencesToNonExistantConfigs() throws CoreException {
 		IProjectDescription desc = project0.getDescription();
 
-		IBuildConfiguration nonExistent = getWorkspace().newBuildConfiguration(project0.getName(), nonExistentBC, null);
+		IBuildConfiguration nonExistent = getWorkspace().newBuildConfiguration(project0.getName(), nonExistentBC);
 
 		assertFalse("1.0", project0.hasBuildConfiguration(nonExistent));
 
