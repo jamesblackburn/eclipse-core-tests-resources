@@ -54,15 +54,13 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 	public void testBasics() throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		IBuildConfiguration[] configs = new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variantId0, null), getWorkspace().newBuildConfiguration(project.getName(), variantId1, "name1")};
+		IBuildConfiguration[] configs = new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variantId0), getWorkspace().newBuildConfiguration(project.getName(), variantId1)};
 		desc.setBuildConfigurations(configs);
 		project.setDescription(desc, getMonitor());
 
 		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigurations());
 		assertEquals("1.1", variant0, project.getBuildConfiguration(variantId0));
 		assertEquals("1.2", variant1, project.getBuildConfiguration(variantId1));
-		assertEquals("1.3", variant0.getName(), project.getBuildConfiguration(variantId0).getName());
-		assertEquals("1.4", variant1.getName(), project.getBuildConfiguration(variantId1).getName());
 
 		// Build configuration names don't contribute to equality
 		assertTrue("2.0", project.hasBuildConfiguration(variant0));
@@ -85,7 +83,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 
 	public void testDuplicates() throws CoreException {
 		IProjectDescription desc = project.getDescription();
-		desc.setBuildConfigurations(new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variantId0, null), getWorkspace().newBuildConfiguration(project.getName(), variantId1, null), getWorkspace().newBuildConfiguration(project.getName(), variantId0, null)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {getWorkspace().newBuildConfiguration(project.getName(), variantId0), getWorkspace().newBuildConfiguration(project.getName(), variantId1), getWorkspace().newBuildConfiguration(project.getName(), variantId0)});
 		project.setDescription(desc, getMonitor());
 		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigurations());
 	}
@@ -145,7 +143,6 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		for (int i = 0; i < configs.length; i++) {
 			assertEquals("2." + i * 3, newProject, newConfigs[i].getProject());
 			assertEquals("2." + i * 3 + 1, configs[i].getId(), newConfigs[i].getId());
-			assertEquals("2." + i * 3 + 2, configs[i].getName(), newConfigs[i].getName());
 		}
 	}
 }

@@ -35,14 +35,14 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 	 * return reference to the active configuration in the project
 	 */
 	public IBuildConfiguration getRef(IProject project) {
-		return getWorkspace().newBuildConfiguration(project.getName(), null, null);
+		return getWorkspace().newBuildConfiguration(project.getName(), null);
 	}
 
 	/**
 	 * return reference to the active configuration in the project
 	 */
 	public IBuildConfiguration getConfig(IProject project, String id) {
-		return getWorkspace().newBuildConfiguration(project.getName(), id, null);
+		return getWorkspace().newBuildConfiguration(project.getName(), id);
 	}
 
 	protected void setUp() throws Exception {
@@ -55,7 +55,7 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 		// Dynamic Project level
 		dynRefs = new IProject[] {wr.getProject("ref1"), wr.getProject("ref2")};
 		// Dynamic Build Configuration level -- reverse order
-		configRefs = new IBuildConfiguration[] {getWorkspace().newBuildConfiguration("ref3", "ref3config1", null), getWorkspace().newBuildConfiguration("ref2", "ref2config1", null), getWorkspace().newBuildConfiguration("ref1", "ref1config1", null)};
+		configRefs = new IBuildConfiguration[] {getWorkspace().newBuildConfiguration("ref3", "ref3config1"), getWorkspace().newBuildConfiguration("ref2", "ref2config1"), getWorkspace().newBuildConfiguration("ref1", "ref1config1")};
 		configRefsProjects = new IProject[] {wr.getProject("ref3"), wr.getProject("ref2"), wr.getProject("ref1")};
 		super.setUp();
 	}
