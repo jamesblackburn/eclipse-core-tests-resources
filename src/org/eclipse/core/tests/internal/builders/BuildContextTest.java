@@ -85,7 +85,7 @@ public class BuildContextTest extends AbstractBuilderTest {
 		desc.setBuildSpec(new ICommand[] {command});
 
 		// Create buildConfigs
-		desc.setBuildConfigurations(new IBuildConfiguration[] {project.getWorkspace().newBuildConfiguration(project.getName(), variant0, null), project.getWorkspace().newBuildConfiguration(project.getName(), variant1, null)});
+		desc.setBuildConfigurations(new IBuildConfiguration[] {project.getWorkspace().newBuildConfiguration(project.getName(), variant0), project.getWorkspace().newBuildConfiguration(project.getName(), variant1)});
 
 		project.setDescription(desc, getMonitor());
 	}
