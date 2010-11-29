@@ -90,7 +90,7 @@ public class ProjectDescriptionDynamicTest extends WorkspaceSessionTest {
 	public void test2() throws Exception {
 		assertTrue("1.0", proj.isAccessible());
 		assertEquals("1.1", dynRefs, proj.getDescription().getDynamicReferences());
-		assertEquals("1.2", configs, proj.getBuildConfigurations());
+		assertEquals("1.2", configs, proj.getBuildConfigs());
 		assertEquals("1.3", configs[0], proj.getActiveBuildConfig());
 
 		// set build configuration level dynamic references on the project

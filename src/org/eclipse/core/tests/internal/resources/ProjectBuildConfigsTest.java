@@ -58,7 +58,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		desc.setBuildConfigs(configs);
 		project.setDescription(desc, getMonitor());
 
-		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigurations());
+		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigs());
 		assertEquals("1.1", variant0, project.getBuildConfig(variantId0));
 		assertEquals("1.2", variant1, project.getBuildConfig(variantId1));
 
@@ -76,7 +76,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		desc.setActiveBuildConfig(variantId2);
 		assertEquals("3.2", variant1, project.getActiveBuildConfig());
 
-		IBuildConfiguration variant = project.getBuildConfigurations()[0];
+		IBuildConfiguration variant = project.getBuildConfigs()[0];
 		assertEquals("4.0", project, variant.getProject());
 		assertEquals("4.1", variantId0, variant.getName());
 	}
@@ -85,7 +85,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		IProjectDescription desc = project.getDescription();
 		desc.setBuildConfigs(new String[] {variantId0, variantId1, variantId0});
 		project.setDescription(desc, getMonitor());
-		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigurations());
+		assertEquals("1.0", new IBuildConfiguration[] {variant0, variant1}, project.getBuildConfigs());
 	}
 
 	public void testDefaultVariant() throws CoreException {
@@ -93,7 +93,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		desc.setBuildConfigs(new String[] {});
 		project.setDescription(desc, getMonitor());
 
-		assertEquals("1.0", new IBuildConfiguration[] {defaultVariant}, project.getBuildConfigurations());
+		assertEquals("1.0", new IBuildConfiguration[] {defaultVariant}, project.getBuildConfigs());
 		assertTrue("1.1", project.hasBuildConfig(defaultVariant.getName()));
 
 		assertEquals("2.0", defaultVariant, project.getActiveBuildConfig());
@@ -139,7 +139,7 @@ public class ProjectBuildConfigsTest extends ResourceTest {
 		IProject newProject = getWorkspace().getRoot().getProject(newProjectName);
 		assertTrue("1.0", newProject.exists());
 
-		IBuildConfiguration[] newConfigs = newProject.getBuildConfigurations();
+		IBuildConfiguration[] newConfigs = newProject.getBuildConfigs();
 		for (int i = 0; i < configs.length; i++) {
 			assertEquals("2." + i * 3, newProject, newConfigs[i].getProject());
 			assertEquals("2." + i * 3 + 1, configs[i].getName(), newConfigs[i].getName());
