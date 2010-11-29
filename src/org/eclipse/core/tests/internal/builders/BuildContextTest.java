@@ -31,8 +31,6 @@ public class BuildContextTest extends AbstractBuilderTest {
 	private IProject project0;
 	private IProject project1;
 	private IProject project2;
-	private IProject project3;
-	private IProject project4;
 	private final String variant0 = "Variant0";
 	private final String variant1 = "Variant1";
 
@@ -47,16 +45,12 @@ public class BuildContextTest extends AbstractBuilderTest {
 		project0 = root.getProject("BuildContextTests_p0");
 		project1 = root.getProject("BuildContextTests_p1");
 		project2 = root.getProject("BuildContextTests_p2");
-		project3 = root.getProject("BuildContextTests_p3");
-		project4 = root.getProject("BuildContextTests_p4");
-		IResource[] resources = {project0, project1, project2, project3, project4};
+		IResource[] resources = {project0, project1, project2};
 		ensureExistsInWorkspace(resources, true);
 		setAutoBuilding(false);
 		setupProject(project0);
 		setupProject(project1);
 		setupProject(project2);
-		setupProject(project3);
-		setupProject(project4);
 	}
 
 	protected void tearDown() throws Exception {
@@ -66,8 +60,6 @@ public class BuildContextTest extends AbstractBuilderTest {
 		project0.delete(true, null);
 		project1.delete(true, null);
 		project2.delete(true, null);
-		project3.delete(true, null);
-		project4.delete(true, null);
 	}
 
 	/**
