@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.core.tests.internal.builders;
 
-import org.eclipse.core.resources.IBuildConfiguration;
-
 import java.util.*;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
@@ -72,13 +70,13 @@ public class ContextBuilder extends TestBuilder {
 	}
 
 	protected void startupOnInitialize() {
-		builders.put(getBuildConfiguration(), this);
+		builders.put(getBuildConfig(), this);
 	}
 
 	protected IProject[] build(int kind, Map args, IProgressMonitor monitor) throws CoreException {
 		contextForLastBuild = getContext();
 		triggerForLastBuild = kind;
-		buildConfigurationForLastBuild = getBuildConfiguration();
+		buildConfigurationForLastBuild = getBuildConfig();
 		return super.build(kind, args, monitor);
 	}
 
@@ -86,7 +84,7 @@ public class ContextBuilder extends TestBuilder {
 		super.clean(monitor);
 		contextForLastBuild = getContext();
 		triggerForLastBuild = IncrementalProjectBuilder.CLEAN_BUILD;
-		buildConfigurationForLastBuild = getBuildConfiguration();
+		buildConfigurationForLastBuild = getBuildConfig();
 	}
 
 	/*
@@ -96,7 +94,7 @@ public class ContextBuilder extends TestBuilder {
 	public ISchedulingRule getRule(int kind, Map args) {
 		getRuleCalledForLastBuild = true;
 		contextForLastBuildInGetRule = getContext();
-		buildConfigurationForLastBuildInGetRule = getBuildConfiguration();
+		buildConfigurationForLastBuildInGetRule = getBuildConfig();
 		return super.getRule(kind, args);
 	}
 }
