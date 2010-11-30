@@ -23,7 +23,7 @@ public class ContextBuilder extends TestBuilder {
 	public static final String BUILDER_NAME = "org.eclipse.core.tests.resources.contextbuilder";
 
 	/** Stores IBuildConfiguration -> ContextBuilder */
-	private static HashMap builders = new HashMap();
+	private static HashMap<IBuildConfiguration, ContextBuilder> builders = new HashMap<IBuildConfiguration, ContextBuilder>();
 	/** The context information for the last run of this builder */
 	IBuildContext contextForLastBuild = null;
 	/** The trigger for the last run of this builder */
@@ -39,16 +39,18 @@ public class ContextBuilder extends TestBuilder {
 	}
 
 	public static ContextBuilder getBuilder(IBuildConfiguration variant) {
-		return (ContextBuilder) builders.get(variant);
+		return builders.get(variant);
 	}
 
 	public static IBuildContext getContext(IBuildConfiguration variant) {
+		if (!builders.containsKey(variant))
+			return null;
 		return getBuilder(variant).contextForLastBuild;
 	}
 
 	public static boolean checkValid() {
-		for (Iterator it = builders.values().iterator(); it.hasNext();) {
-			ContextBuilder builder = (ContextBuilder) it.next();
+		for (Iterator<ContextBuilder> it = builders.values().iterator(); it.hasNext();) {
+			ContextBuilder builder = it.next();
 			if (builder.getRuleCalledForLastBuild && !builder.contextForLastBuild.equals(builder.contextForLastBuildInGetRule))
 				return false;
 			if (builder.getRuleCalledForLastBuild && !builder.buildConfigurationForLastBuild.equals(builder.buildConfigurationForLastBuildInGetRule))
@@ -58,8 +60,8 @@ public class ContextBuilder extends TestBuilder {
 	}
 
 	public static void clearStats() {
-		for (Iterator it = builders.values().iterator(); it.hasNext();) {
-			ContextBuilder builder = (ContextBuilder) it.next();
+		for (Iterator<ContextBuilder> it = builders.values().iterator(); it.hasNext();) {
+			ContextBuilder builder = it.next();
 			builder.contextForLastBuild = null;
 			builder.contextForLastBuildInGetRule = null;
 			builder.buildConfigurationForLastBuild = null;
