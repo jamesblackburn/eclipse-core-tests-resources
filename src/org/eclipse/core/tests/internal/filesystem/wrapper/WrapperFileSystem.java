@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     James Blackburn (Broadcom Corp.)
  *******************************************************************************/
 package org.eclipse.core.tests.internal.filesystem.wrapper;
 
@@ -22,25 +23,43 @@ import org.eclipse.core.tests.resources.ResourceTest;
 /**
  * A simple file system implementation that acts as a wrapper around the
  * local file system.
+ * <p>
+ * Also allows tests to inject a custom FileSystem returning their own
+ * special-purpose FileStore.  Tests can use {@link #setCustomFileSystem(FileSystem)}
+ * to provide custom {@link WrapperFileStore} behaviour.
+ * </p>
  */
 public class WrapperFileSystem extends FileSystem {
 
-	private static final IFileStore NULL_ROOT = EFS.getNullFileSystem().getStore(Path.ROOT);
+	protected static final IFileStore NULL_ROOT = EFS.getNullFileSystem().getStore(Path.ROOT);
 
 	private static final String SCHEME_WRAPPED = "wrapped";
 
-	private static WrapperFileSystem instance;
+	private static volatile WrapperFileSystem instance;
+
+	/** Custom file-system instance */
+	private static volatile FileSystem customFS;
 
 	public static URI getBasicURI(URI wrappedURI) {
 		Assert.isLegal(SCHEME_WRAPPED.equals(wrappedURI.getScheme()));
 		return URI.create(wrappedURI.getQuery());
 	}
 
-	public static WrapperFileSystem getInstance() {
-		WrapperFileSystem tmpInstance = instance;
-		if (tmpInstance != null)
-			return tmpInstance;
+	public static synchronized WrapperFileSystem getInstance() {
+		if (instance != null)
+			return instance;
 		return instance = new WrapperFileSystem();
+	}
+
+	/**
+	 * Set custom filesystem which may return overriden
+	 * {@link IFileStore}s (using {@link WrapperFileStore}
+	 * as a base, some functionality can be changed).
+	 * @param fs filesystem, or null to use default {@link WrapperFileStore}
+	 *        based implementation.
+	 */
+	public static void setCustomFileSystem(FileSystem fs) {
+		getInstance().customFS = fs;
 	}
 
 	public static URI getWrappedURI(URI baseURI) {
@@ -62,6 +81,11 @@ public class WrapperFileSystem extends FileSystem {
 	 */
 	public IFileStore getStore(URI uri) {
 		Assert.isLegal(SCHEME_WRAPPED.equals(uri.getScheme()));
+
+		// Delegate to customFS if set
+		if (customFS != null)
+			return customFS.getStore(uri);
+
 		IFileStore baseStore;
 		try {
 			baseStore = EFS.getStore(getBasicURI(uri));

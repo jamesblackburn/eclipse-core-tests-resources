@@ -28,6 +28,15 @@ public class WrapperFileStore extends FileStore {
 		this.baseStore = baseStore;
 	}
 
+	protected IFileStore createNewWrappedStore(IFileStore store) {
+		try {
+			return getClass().getConstructor(IFileStore.class).newInstance(store);
+		} catch (Exception e) {
+			// Test infrastructure failure...
+			throw new Error(e);
+		}
+	}
+
 	public IFileInfo[] childInfos(int options, IProgressMonitor monitor) throws CoreException {
 		return baseStore.childInfos(options, monitor);
 	}
@@ -40,7 +49,7 @@ public class WrapperFileStore extends FileStore {
 		IFileStore[] childStores = baseStore.childStores(options, monitor);
 		for (int i = 0; i < childStores.length; i++)
 			// replace ordinary file store with wrapper version
-			childStores[i] = new WrapperFileStore(childStores[i]);
+			childStores[i] = createNewWrappedStore(childStores[i]);
 		return childStores;
 	}
 
@@ -73,15 +82,15 @@ public class WrapperFileStore extends FileStore {
 	}
 
 	public IFileStore getChild(IPath path) {
-		return new WrapperFileStore(baseStore.getChild(path));
+		return createNewWrappedStore(baseStore.getChild(path));
 	}
-	
+
 	public IFileStore getFileStore(IPath path) {
-		return new WrapperFileStore(baseStore.getFileStore(path));
+		return createNewWrappedStore(baseStore.getFileStore(path));
 	}
 
 	public IFileStore getChild(String name) {
-		return new WrapperFileStore(baseStore.getChild(name));
+		return createNewWrappedStore(baseStore.getChild(name));
 	}
 
 	public IFileSystem getFileSystem() {
@@ -94,7 +103,7 @@ public class WrapperFileStore extends FileStore {
 
 	public IFileStore getParent() {
 		IFileStore baseParent = baseStore.getParent();
-		return baseParent == null ? null : new WrapperFileStore(baseParent);
+		return baseParent == null ? null : createNewWrappedStore(baseParent);
 	}
 
 	public int hashCode() {
