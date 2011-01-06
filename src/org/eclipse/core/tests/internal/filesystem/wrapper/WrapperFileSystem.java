@@ -24,9 +24,9 @@ import org.eclipse.core.tests.resources.ResourceTest;
  * A simple file system implementation that acts as a wrapper around the
  * local file system.
  * <p>
- * Also allows tests to inject a custom FileSystem returning their own
- * special-purpose FileStore.  Tests can use {@link #setCustomFileSystem(FileSystem)}
- * to provide custom {@link WrapperFileStore} behaviour.
+ * Also allows tests to inject a custom FileStore template class (derived from 
+ * {@link WrapperFileStore}). Tests can use {@link #setCustomFileStore(Class)}
+ * to override default {@link WrapperFileStore} behaviour.
  * </p>
  */
 public class WrapperFileSystem extends FileSystem {
@@ -60,7 +60,7 @@ public class WrapperFileSystem extends FileSystem {
 	 * @param fs filestore, or null to use default {@link WrapperFileStore}
 	 *        based implementation.
 	 */
-	public static void setCustomFileSystem(Class<? extends WrapperFileStore> fs) {
+	public static void setCustomFileStore(Class<? extends WrapperFileStore> fs) {
 		if (fs == null)
 			customFS = WrapperFileStore.class;
 		else
@@ -86,7 +86,6 @@ public class WrapperFileSystem extends FileSystem {
 	 */
 	public IFileStore getStore(URI uri) {
 		Assert.isLegal(SCHEME_WRAPPED.equals(uri.getScheme()));
-
 		IFileStore baseStore;
 		try {
 			baseStore = EFS.getStore(getBasicURI(uri));

@@ -44,7 +44,7 @@ public class Bug_332543 extends ResourceTest {
 			OutputStream os = super.openOutputStream(options, monitor);
 			os = new BufferedOutputStream(os) {
 				public void close() throws java.io.IOException {
-					// We close the output stream (so there aren't issues deleting the project during tear-down
+					// We close the output stream (so there aren't issues deleting the project during tear-down)
 					super.close();
 					// But we also throw IOException as if the operation had failed.
 					throw new IOException("Whoops I dunno how to close!");
@@ -61,7 +61,7 @@ public class Bug_332543 extends ResourceTest {
 
 	@Override
 	protected void tearDown() throws Exception {
-		WrapperFileSystem.setCustomFileSystem(null);
+		WrapperFileSystem.setCustomFileStore(null);
 		super.tearDown();
 	}
 
@@ -83,7 +83,7 @@ public class Bug_332543 extends ResourceTest {
 		ensureExistsInFileSystem(f);
 
 		// Set our evil IOException on close() fs.
-		WrapperFileSystem.setCustomFileSystem(IOErrOnCloseFileStore.class);
+		WrapperFileSystem.setCustomFileStore(IOErrOnCloseFileStore.class);
 
 		// Now open the project
 		project.open(getMonitor());
