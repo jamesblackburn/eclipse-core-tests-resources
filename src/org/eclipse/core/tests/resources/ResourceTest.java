@@ -773,6 +773,7 @@ public abstract class ResourceTest extends CoreTest {
 			try {
 				os = new FileOutputStream(osFile);
 				os.write(newContent.getBytes("UTF8"));
+				os.close();
 			} finally {
 				FileUtil.safeClose(os);
 			}

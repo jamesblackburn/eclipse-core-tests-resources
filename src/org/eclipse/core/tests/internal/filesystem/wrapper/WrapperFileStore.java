@@ -29,13 +29,17 @@ public class WrapperFileStore extends FileStore {
 		this.baseStore = baseStore;
 	}
 
-	protected IFileStore createNewWrappedStore(IFileStore store) {
+	public static IFileStore newInstance(Class<? extends WrapperFileStore> clazz, IFileStore baseStore) {
 		try {
-			return getClass().getConstructor(IFileStore.class).newInstance(store);
+			return clazz.getConstructor(IFileStore.class).newInstance(baseStore);
 		} catch (Exception e) {
 			// Test infrastructure failure...
 			throw new Error(e);
 		}
+	}
+
+	protected IFileStore createNewWrappedStore(IFileStore store) {
+		return newInstance(getClass(), store);
 	}
 
 	public IFileInfo[] childInfos(int options, IProgressMonitor monitor) throws CoreException {

@@ -14,11 +14,10 @@ import java.io.*;
 import java.net.URI;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.eclipse.core.filesystem.*;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.filesystem.URIUtil;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
-import org.eclipse.core.tests.harness.CoreTest;
 import org.eclipse.core.tests.internal.filesystem.wrapper.WrapperFileStore;
 import org.eclipse.core.tests.internal.filesystem.wrapper.WrapperFileSystem;
 import org.eclipse.core.tests.resources.ResourceTest;
@@ -32,6 +31,10 @@ public class Bug_332543 extends ResourceTest {
 		return new TestSuite(Bug_332543.class);
 	}
 
+	/**
+	 * Wrapper FS which throws an IOException when someone
+	 * closes an output stream...
+	 */
 	public static class IOErrOnCloseFileStore extends WrapperFileStore {
 		public IOErrOnCloseFileStore(IFileStore store) {
 			super(store);
@@ -41,32 +44,13 @@ public class Bug_332543 extends ResourceTest {
 			OutputStream os = super.openOutputStream(options, monitor);
 			os = new BufferedOutputStream(os) {
 				public void close() throws java.io.IOException {
+					// We close the output stream (so there aren't issues deleting the project during tear-down
+					super.close();
+					// But we also throw IOException as if the operation had failed.
 					throw new IOException("Whoops I dunno how to close!");
 				}
 			};
 			return os;
-		}
-	}
-
-	/**
-	 * Wrapper FS which throws an IOException when someone
-	 * closes an output stream...
-	 */
-	public static class IOErrOnCloseFS extends WrapperFileSystem {
-		public IOErrOnCloseFS() {
-		}
-
-		@Override
-		public IFileStore getStore(URI uri) {
-			IFileStore baseStore;
-			try {
-				baseStore = EFS.getStore(getBasicURI(uri));
-			} catch (CoreException e) {
-				CoreTest.log(ResourceTest.PI_RESOURCES_TESTS, e);
-				return NULL_ROOT;
-			}
-			baseStore = new IOErrOnCloseFileStore(baseStore);
-			return baseStore;
 		}
 	}
 
@@ -77,8 +61,8 @@ public class Bug_332543 extends ResourceTest {
 
 	@Override
 	protected void tearDown() throws Exception {
-		super.tearDown();
 		WrapperFileSystem.setCustomFileSystem(null);
+		super.tearDown();
 	}
 
 	public void testBug() throws Exception {
@@ -99,7 +83,7 @@ public class Bug_332543 extends ResourceTest {
 		ensureExistsInFileSystem(f);
 
 		// Set our evil IOException on close() fs.
-		WrapperFileSystem.setCustomFileSystem(new IOErrOnCloseFS());
+		WrapperFileSystem.setCustomFileSystem(IOErrOnCloseFileStore.class);
 
 		// Now open the project
 		project.open(getMonitor());

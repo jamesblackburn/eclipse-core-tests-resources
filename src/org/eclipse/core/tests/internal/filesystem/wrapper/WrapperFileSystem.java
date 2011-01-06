@@ -37,8 +37,8 @@ public class WrapperFileSystem extends FileSystem {
 
 	private static volatile WrapperFileSystem instance;
 
-	/** Custom file-system instance */
-	private static volatile FileSystem customFS;
+	/** Custom file-store wrapper */
+	private static volatile Class<? extends WrapperFileStore> customFS = WrapperFileStore.class;
 
 	public static URI getBasicURI(URI wrappedURI) {
 		Assert.isLegal(SCHEME_WRAPPED.equals(wrappedURI.getScheme()));
@@ -52,14 +52,19 @@ public class WrapperFileSystem extends FileSystem {
 	}
 
 	/**
-	 * Set custom filesystem which may return overriden
-	 * {@link IFileStore}s (using {@link WrapperFileStore}
-	 * as a base, some functionality can be changed).
-	 * @param fs filesystem, or null to use default {@link WrapperFileStore}
+	 * Use fs as the WrapperFileStore to use in this filesystem.
+	 * Allows tests to easily override existing IFileStore behaviour.
+	 * By extending {@link WrapperFileStore} conditions difficult to simulate
+	 * on the LocalFileSystem can be provoked.
+	 * 
+	 * @param fs filestore, or null to use default {@link WrapperFileStore}
 	 *        based implementation.
 	 */
-	public static void setCustomFileSystem(FileSystem fs) {
-		getInstance().customFS = fs;
+	public static void setCustomFileSystem(Class<? extends WrapperFileStore> fs) {
+		if (fs == null)
+			customFS = WrapperFileStore.class;
+		else
+			customFS = fs;
 	}
 
 	public static URI getWrappedURI(URI baseURI) {
@@ -82,10 +87,6 @@ public class WrapperFileSystem extends FileSystem {
 	public IFileStore getStore(URI uri) {
 		Assert.isLegal(SCHEME_WRAPPED.equals(uri.getScheme()));
 
-		// Delegate to customFS if set
-		if (customFS != null)
-			return customFS.getStore(uri);
-
 		IFileStore baseStore;
 		try {
 			baseStore = EFS.getStore(getBasicURI(uri));
@@ -93,6 +94,6 @@ public class WrapperFileSystem extends FileSystem {
 			CoreTest.log(ResourceTest.PI_RESOURCES_TESTS, e);
 			return NULL_ROOT;
 		}
-		return new WrapperFileStore(baseStore);
+		return WrapperFileStore.newInstance(customFS, baseStore);
 	}
 }
