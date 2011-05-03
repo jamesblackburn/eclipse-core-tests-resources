@@ -7,7 +7,7 @@
  * 
  *  Contributors:
  *     IBM Corporation - initial API and implementation
- *     James Blackburn (Broadcom Corp.)
+ *     James Blackburn (Broadcom Corp.) - ongoing development
  *******************************************************************************/
 package org.eclipse.core.tests.internal.filesystem.wrapper;
 

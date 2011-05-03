@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     James Blackburn (Broadcom Corp.) - ongoing development
  *******************************************************************************/
 package org.eclipse.core.tests.resources;
 
@@ -70,7 +71,7 @@ public abstract class ResourceTest extends CoreTest {
 	 * test is complete
 	 * @see #getTempStore
 	 */
-	private final Set storesToDelete = new HashSet();
+	private final Set<IFileStore> storesToDelete = new HashSet<IFileStore>();
 
 	/**
 	 * Does some garbage collections to free unused resources
@@ -372,7 +373,7 @@ public abstract class ResourceTest extends CoreTest {
 	}
 
 	protected void cleanup() throws CoreException {
-		final IFileStore[] toDelete = (IFileStore[]) storesToDelete.toArray(new IFileStore[0]);
+		final IFileStore[] toDelete = storesToDelete.toArray(new IFileStore[0]);
 		storesToDelete.clear();
 		getWorkspace().run(new IWorkspaceRunnable() {
 			public void run(IProgressMonitor monitor) throws CoreException {
@@ -657,22 +658,36 @@ public abstract class ResourceTest extends CoreTest {
 	}
 
 	/**
-	 * Modifies the resource in the file system so that it is out of sync
+	 * Modifies the passed in IFile in the file system so that it is out of sync
 	 * with the workspace.
 	 */
-	public void ensureOutOfSync(final IResource resource) {
-		if (resource.getType() != IResource.FILE)
-			return;
-		IFile file = (IFile) resource;
-		ensureExistsInWorkspace(file, true);
-		while (file.isSynchronized(IResource.DEPTH_ZERO)) {
-			modifyInFileSystem(file);
+	public void ensureOutOfSync(final IFile file) {
+		modifyInFileSystem(file);
+		touchInFilesystem(file);
+		assertTrue("File not out of sync: " + file.getLocation().toOSString(), file.getLocation().toFile().lastModified() != file.getLocalTimeStamp());
+	}
+
+	/**
+	 * Touch (but don't modify) the resource in the filesystem so that it's modification stamp is newer than 
+	 * the cached value in the Workspace. 
+	 */
+	public void touchInFilesystem(IResource resource) {
+		java.io.File osFile = resource.getLocation().toFile();
+		// Ensure the resource exists in the filesystem
+		if (!osFile.exists())
+			ensureExistsInFileSystem(resource);
+		// Manually check that the core.resource time-stamp is out-of-sync
+		// with the java.io.File last modified. #isSynchronized() will schedule
+		// out-of-sync resources for refresh, so we don't use that here.
+		for (int count = 0; count < 30 && osFile.lastModified() == resource.getLocalTimeStamp(); count++) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				// ignore
 			}
+			resource.getLocation().toFile().setLastModified(System.currentTimeMillis());
 		}
+		assertTrue("File not out of sync: " + resource.getLocation().toOSString(), osFile.lastModified() != resource.getLocalTimeStamp());
 	}
 
 	private boolean existsInFileSystem(IResource resource) {
@@ -944,5 +959,32 @@ public abstract class ResourceTest extends CoreTest {
 		} catch (InterruptedException e) {
 			//ignore
 		}
+	}
+
+	public String[] findAvailableDevices() {
+		String[] devices = new String[2];
+		for (int i = 97/*a*/; i < 123/*z*/; i++) {
+			char c = (char) i;
+			if (new java.io.File(c + ":\\").exists() && new java.io.File(c + ":\\").canWrite()) {
+				if (devices[0] == null) {
+					devices[0] = c + ":/";
+				} else {
+					devices[1] = c + ":/";
+					break;
+				}
+			}
+		}
+		return devices;
+	}
+
+	/**
+	 * Returns true when run on Hudson Win7 at eclipse.org
+	 */
+	protected boolean isHudsonOnWin7() {
+		boolean isWindows7 = isWindowsMinVersion(6, 1, 0);
+		String hudsonProp = System.getProperty("hudson");
+		System.out.println("Windows 7: " + isWindows7 + ", Hudson prop: " + hudsonProp);
+		// The check against Hudson is disabled temporarily, see Bug 341334
+		return isWindows7 /*&& Boolean.TRUE.toString().equalsIgnoreCase(hudsonProp)*/;
 	}
 }

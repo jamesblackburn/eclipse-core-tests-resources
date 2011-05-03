@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2005, 2007 IBM Corporation and others.
+ *  Copyright (c) 2005, 2011 IBM Corporation and others.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  * 
  *  Contributors:
  *     IBM Corporation - initial API and implementation
+ *  Martin Oberhuber (Wind River) - [335864] ResourceAttributeTest fails on Win7
  *******************************************************************************/
 package org.eclipse.core.tests.resources;
 
@@ -55,7 +56,7 @@ public class ResourceAttributeTest extends ResourceTest {
 		attributes.setHidden(value);
 		resource.setResourceAttributes(attributes);
 	}
-	
+
 	private void setSymlink(IResource resource, boolean value) throws CoreException {
 		ResourceAttributes attributes = resource.getResourceAttributes();
 		assertNotNull("setSymlink for null attributes", attributes);
@@ -275,6 +276,9 @@ public class ResourceAttributeTest extends ResourceTest {
 	}
 
 	public void testAttributeSymlink() {
+		if (isHudsonOnWin7())
+			return;
+
 		// only activate this test on platforms that support it
 		if (!isAttributeSupported(EFS.ATTRIBUTE_SYMLINK))
 			return;
@@ -302,7 +306,7 @@ public class ResourceAttributeTest extends ResourceTest {
 
 		// create a link to the target file and add it to the workspace,
 		// the resource in the workspace should have symbolic link attribute set
-		mkLink(project.getLocation().toFile(), "link", "target");
+		createSymLink(project.getLocation().toFile(), "link", "target", false);
 		ensureExistsInWorkspace(link, true);
 		assertTrue("5.0", link.getResourceAttributes().isSymbolicLink());
 
@@ -336,18 +340,41 @@ public class ResourceAttributeTest extends ResourceTest {
 		}
 	}
 
-	private void mkLink(java.io.File basedir, String src, String tgt) {
-		String[] envp = {};
+	public void testAttributes() {
+		int[] attributes = new int[] {EFS.ATTRIBUTE_GROUP_READ, EFS.ATTRIBUTE_GROUP_WRITE, EFS.ATTRIBUTE_GROUP_EXECUTE, EFS.ATTRIBUTE_OTHER_READ, EFS.ATTRIBUTE_OTHER_WRITE, EFS.ATTRIBUTE_OTHER_EXECUTE};
+
+		IProject project = getWorkspace().getRoot().getProject(getUniqueString());
+		IFile file = project.getFile(getUniqueString());
+		ensureExistsInWorkspace(file, getRandomContents());
+
 		try {
-			Process p;
-			String[] cmd = {"ln", "-s", tgt, src};
-			p = Runtime.getRuntime().exec(cmd, envp, basedir);
-			int exitcode = p.waitFor();
-			assertEquals(exitcode, 0);
-		} catch (IOException e) {
-			fail("mkLink", e);
-		} catch (InterruptedException e) {
-			fail("mkLink", e);
+			for (int attribute : attributes) {
+				// only activate this test on platforms that support it
+				if (!isAttributeSupported(attribute))
+					continue;
+
+				// file
+				ResourceAttributes resAttr = file.getResourceAttributes();
+				resAttr.set(attribute, true);
+				file.setResourceAttributes(resAttr);
+				assertTrue("1.0", file.getResourceAttributes().isSet(attribute));
+
+				resAttr.set(attribute, false);
+				file.setResourceAttributes(resAttr);
+				assertFalse("2.0", file.getResourceAttributes().isSet(attribute));
+
+				// folder
+				resAttr = project.getResourceAttributes();
+				resAttr.set(attribute, true);
+				project.setResourceAttributes(resAttr);
+				assertTrue("3.0", project.getResourceAttributes().isSet(attribute));
+
+				resAttr.set(attribute, false);
+				project.setResourceAttributes(resAttr);
+				assertFalse("4.0", project.getResourceAttributes().isSet(attribute));
+			}
+		} catch (CoreException e) {
+			fail("5.0", e);
 		}
 	}
 }
